@@ -107,8 +107,8 @@ supabase/
 3. **Authentication → Sign In / Providers → Email**:
    - **Turn OFF "Allow new users to sign up".** Only admins have accounts; customers check out as guests. (Admin access is also enforced by the `admin_users` table, so even a stray sign-up gets no access.)
 4. **Authentication → URL Configuration**:
-   - **Site URL:** `https://vastrasundari.github.io`
-   - **Redirect URLs:** add `https://vastrasundari.github.io/admin/` (used by "Forgot password").
+   - **Site URL:** `https://vastrasundari.duckdns.org`
+   - **Redirect URLs:** add `https://vastrasundari.duckdns.org/admin/` (used by "Forgot password").
 
 Tables created: `products`, `product_images`, `product_sizes`, `customers`, `orders`, `order_items`, `order_status_history`, `admin_users`, plus `notification_log` (a record of every email/WhatsApp attempt, visible on each order in the admin).
 
@@ -126,7 +126,7 @@ Tables created: `products`, `product_images`, `product_sizes`, `customers`, `ord
    where email = 'owner@yourdomain.com';   -- the email you just created
    ```
 
-3. Sign in at `https://vastrasundari.github.io/admin/`.
+3. Sign in at `https://vastrasundari.duckdns.org/admin/`.
 
 To **remove** an admin: `delete from public.admin_users where email = 'person@yourdomain.com';`
 
@@ -191,8 +191,8 @@ There are **two** kinds of configuration — keep them separate:
 
 | Variable | Required | Example |
 | --- | --- | --- |
-| `SITE_URL` | yes | `https://vastrasundari.github.io` |
-| `ALLOWED_ORIGINS` | recommended | `https://vastrasundari.github.io` |
+| `SITE_URL` | yes | `https://vastrasundari.duckdns.org` |
+| `ALLOWED_ORIGINS` | recommended | `https://vastrasundari.duckdns.org,https://vastrasundari.github.io` |
 | `RESEND_API_KEY` | yes | `re_…` |
 | `EMAIL_FROM` | yes | `Vastra Sundari <orders@yourdomain.com>` |
 | `EMAIL_REPLY_TO` | optional | `support@yourdomain.com` |
@@ -256,7 +256,7 @@ The site is plain static files — no build is needed on GitHub.
 
 1. Commit and push to the `main` branch of `vastrasundari/vastrasundari.github.io`.
 2. On GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch**, **Branch: `main` / `(root)`**.
-3. After 1–2 minutes the site is live at <https://vastrasundari.github.io> and the admin at <https://vastrasundari.github.io/admin/>.
+3. After 1–2 minutes the site is live at <https://vastrasundari.duckdns.org> (the `github.io` address redirects there) and the admin at <https://vastrasundari.duckdns.org/admin/>.
 
 If you change styles that use Tailwind classes, rebuild the CSS before committing:
 
@@ -265,7 +265,18 @@ npm install
 npm run build:css
 ```
 
-**Custom domain (optional):** add it in **Settings → Pages → Custom domain**, then update `SITE_URL`, `ALLOWED_ORIGINS` and the Supabase Auth URLs to the new domain.
+### Free subdomain: vastrasundari.duckdns.org
+
+The site uses a free [DuckDNS](https://www.duckdns.org) subdomain pointed at GitHub Pages — no domain purchase, no server, free HTTPS.
+
+1. Sign in at <https://www.duckdns.org> (GitHub/Google login) and add the subdomain `vastrasundari`.
+2. In the **current ip** field enter `185.199.108.153` (a GitHub Pages IP) and click **update ip**. Optionally set **ipv6** to `2606:50c0:8000::153`.
+3. The repository contains a `CNAME` file with `vastrasundari.duckdns.org`; GitHub Pages reads it (also visible in **Settings → Pages → Custom domain**).
+4. When the DNS check passes in **Settings → Pages**, tick **Enforce HTTPS** (GitHub issues a free Let's Encrypt certificate and renews it automatically).
+
+The DuckDNS token is **not** needed for this setup and must never be committed. GitHub's Pages IPs are fixed, so no IP-update job is required.
+
+To move to a purchased domain later, replace the `CNAME` file contents and update `SITE_URL`, `ALLOWED_ORIGINS` and the Supabase Auth URLs.
 
 **Hero photograph:** save your editorial image as `assets/images/hero-chaniya-choli.jpg` (landscape, ≥ 2400×1600, model right of centre). Until then a designed fallback is shown.
 
