@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaniya Choli | Vastra Sundari</title>
+  <meta name="theme-color" content="#641B32">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tailwind.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+</head>
+<body>
+  <script src="assets/js/layout.js" data-part="header"></script>
+
+  <main class="container py-8 md:py-14" id="pdp">
+    <div class="py-24 text-center text-burgundy"><span class="vs-spinner"></span></div>
+  </main>
+
+  <script src="assets/js/layout.js" data-part="footer"></script>
+  <script src="assets/js/main.js" defer></script>
+  <script type="module">
+    import { sb, isConfigured, NOT_CONFIGURED_HTML } from "./assets/js/lib/supabase.js";
+    import { esc, inr, qs, COLLECTIONS, imageFallback } from "./assets/js/lib/util.js";
+    import { addToCart, inWishlist, toggleWishlist } from "./assets/js/lib/cart.js";
+
+    const root = document.getElementById("pdp");
+    const slug = (qs("slug") || "").toLowerCase();
+
+    const notFound = () => {
+      root.innerHTML = `<div class="vs-empty"><p class="font-display text-3xl text-burgundy">Design not found</p>
+        <p class="mt-2 text-sm text-charcoal/60">This piece may no longer be available.</p>
+        <a href="shop.html" class="vs-btn vs-btn--outline mt-6">Browse the collection</a></div>`;
+    };
+
+    if (!isConfigured) root.innerHTML = NOT_CONFIGURED_HTML;
+    else if (!/^[a-z0-9-]{1,120}$/.test(slug)) notFound();
+    else {
+      const { data: p, error } = await sb.from("products")
+        .select("*, product_images(image_url, alt_text, sort_order), product_sizes(id, size_label, stock, sort_order)")
+        .eq("slug", slug).eq("is_active", true).maybeSingle();
+      if (error || !p) notFound();
+      else render(p);
+    }
+
+    function render(p) {
+      document.title = `${p.name} | Vastra Sundari`;
+      const imgs = [...p.product_images].sort((a, b) => a.sort_order - b.sort_order);
+      const sizes = [...p.product_sizes].sort((a, b) => a.sort_order - b.sort_order);
+      const col = COLLECTIONS[p.collection];
+      const details = [["Fabric", p.fabric], ["Craft", p.craft], ["Colour", p.color], ["Collection", col?.label]].filter(([, v]) => v);
+      let selected = null;
+      let qty = 1;
+
+      root.innerHTML = `
+        <nav class="mb-6 text-xs text-charcoal/55" aria-label="Breadcrumb">
+          <a href="index.html" class="hover:text-burgundy">Home</a> <span class="mx-1">/</span>
+          <a href="shop.html?collection=${esc(p.collection)}" class="hover:text-burgundy">${esc(col?.label || "Shop")}</a> <span class="mx-1">/</span>
+          <span class="text-charcoal">${esc(p.name)}</span>
+        </nav>
+        <div class="grid gap-8 md:grid-cols-[1.1fr_1fr] md:gap-14">
+          <div>
+            <div class="aspect-[3/4] overflow-hidden bg-[#f1ead9]" id="mainImg">
+              ${imgs[0] ? `<img src="${esc(imgs[0].image_url)}" alt="${esc(imgs[0].alt_text || p.name)}" class="h-full w-full object-cover">` : imageFallback(p.name)}
+            </div>
+            ${imgs.length > 1 ? `<div class="mt-3 grid grid-cols-5 gap-2" id="thumbs">
+              ${imgs.map((im, i) => `<button class="aspect-square overflow-hidden border ${i === 0 ? "border-burgundy" : "border-transparent"}" data-i="${i}" aria-label="View image ${i + 1}">
+                <img src="${esc(im.image_url)}" alt="" class="h-full w-full object-cover" loading="lazy"></button>`).join("")}
+            </div>` : ""}
+          </div>
+
+          <div class="md:pt-4">
+            <p class="vs-kicker">${esc(col?.label || "")}</p>
+            <h1 class="mt-3 font-display text-3xl leading-tight text-burgundy md:text-[42px]">${esc(p.name)}</h1>
+            <p class="mt-4 text-xl">
+              <span class="font-medium text-charcoal">${inr(p.price)}</span>
+              ${p.compare_at_price ? `<span class="ml-3 text-base text-charcoal/45 line-through">${inr(p.compare_at_price)}</span>` : ""}
+            </p>
+            <p class="mt-1 text-xs text-charcoal/55">Inclusive of all taxes · Cash on Delivery available</p>
+
+            <div class="mt-8">
+              <div class="mb-3 flex items-baseline justify-between">
+                <span class="vs-label !mb-0">Select size</span>
+                <span class="text-xs text-charcoal/55" id="stockNote"></span>
+              </div>
+              <div class="flex flex-wrap gap-2" id="sizes" role="group" aria-label="Sizes">
+                ${sizes.length ? sizes.map((s) => `<button type="button" class="vs-size" data-id="${esc(s.id)}" aria-pressed="false" ${s.stock < 1 ? "disabled" : ""}>${esc(s.size_label)}</button>`).join("")
+                  : `<p class="text-sm text-charcoal/60">Currently unavailable.</p>`}
+              </div>
+            </div>
+
+            <div class="mt-6 flex items-center gap-4">
+              <span class="vs-label !mb-0">Quantity</span>
+              <div class="vs-qty"><button type="button" id="qMinus" aria-label="Decrease quantity">−</button><span id="qVal">1</span><button type="button" id="qPlus" aria-label="Increase quantity">+</button></div>
+            </div>
+
+            <div class="mt-8 flex gap-3">
+              <button class="vs-btn vs-btn--primary flex-1" id="addBtn" disabled>Select a size</button>
+              <button class="vs-btn vs-btn--outline !px-5" id="wishBtn" aria-pressed="false" aria-label="Add to wishlist">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.4"><use href="#i-heart"/></svg>
+              </button>
+            </div>
+            <p class="mt-3 hidden text-sm text-burgundy" id="addedMsg" role="status"></p>
+
+            ${p.description ? `<div class="mt-10 border-t border-gold/30 pt-6">
+              <h2 class="vs-label">Description</h2>
+              <div class="whitespace-pre-line text-[15px] leading-7 text-charcoal/80">${esc(p.description)}</div></div>` : ""}
+            ${details.length ? `<dl class="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-gold/30 pt-6 text-sm">
+              ${details.map(([k, v]) => `<div><dt class="vs-label">${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : ""}
+          </div>
+        </div>`;
+
+      // gallery
+      document.getElementById("thumbs")?.addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-i]");
+        if (!b) return;
+        const im = imgs[+b.dataset.i];
+        document.getElementById("mainImg").innerHTML = `<img src="${esc(im.image_url)}" alt="${esc(im.alt_text || p.name)}" class="h-full w-full object-cover">`;
+        document.querySelectorAll("#thumbs button").forEach((t) => t.classList.toggle("border-burgundy", t === b));
+        document.querySelectorAll("#thumbs button").forEach((t) => t.classList.toggle("border-transparent", t !== b));
+      });
+
+      const addBtn = document.getElementById("addBtn");
+      const qVal = document.getElementById("qVal");
+      const maxQty = () => Math.min(10, selected?.stock ?? 10);
+      const syncQty = () => {
+        qty = Math.max(1, Math.min(qty, maxQty()));
+        qVal.textContent = qty;
+        document.getElementById("qMinus").disabled = qty <= 1;
+        document.getElementById("qPlus").disabled = qty >= maxQty();
+      };
+      syncQty();
+
+      document.getElementById("sizes").addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-id]");
+        if (!b || b.disabled) return;
+        selected = sizes.find((s) => s.id === b.dataset.id);
+        document.querySelectorAll("#sizes button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+        document.getElementById("stockNote").textContent = selected.stock <= 3 ? `Only ${selected.stock} left` : "In stock";
+        addBtn.disabled = false;
+        addBtn.textContent = "Add to Bag";
+        syncQty();
+      });
+      document.getElementById("qMinus").onclick = () => { qty--; syncQty(); };
+      document.getElementById("qPlus").onclick = () => { qty++; syncQty(); };
+
+      addBtn.addEventListener("click", () => {
+        if (!selected) return;
+        addToCart({
+          sizeId: selected.id, productId: p.id, slug: p.slug, name: p.name, size: selected.size_label,
+          price: Number(p.price), image: imgs[0]?.image_url || "", qty, maxStock: selected.stock,
+        });
+        const msg = document.getElementById("addedMsg");
+        msg.innerHTML = `Added to your bag — <a href="cart.html" class="underline underline-offset-4">View bag & checkout</a>`;
+        msg.classList.remove("hidden");
+      });
+
+      const wishBtn = document.getElementById("wishBtn");
+      const syncWish = (on) => {
+        wishBtn.setAttribute("aria-pressed", String(on));
+        wishBtn.setAttribute("aria-label", on ? "Remove from wishlist" : "Add to wishlist");
+        wishBtn.querySelector("svg").setAttribute("fill", on ? "currentColor" : "none");
+      };
+      syncWish(inWishlist(p.slug));
+      wishBtn.addEventListener("click", () => syncWish(toggleWishlist(p.slug)));
+    }
+  </script>
+</body>
+</html>

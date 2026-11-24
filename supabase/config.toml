@@ -1,0 +1,16 @@
+# Supabase CLI configuration (only the parts this project needs).
+# Each function authenticates/validates callers itself:
+#   place-order / get-order  -> public, strict server-side validation
+#   admin-update-order       -> verifies the admin's Auth token + admin_users row
+# JWT gateway verification is disabled so the functions also work with the
+# new "publishable" API keys, which are not JWTs.
+project_id = "vastrasundari"
+
+[functions.place-order]
+verify_jwt = false
+
+[functions.get-order]
+verify_jwt = false
+
+[functions.admin-update-order]
+verify_jwt = false

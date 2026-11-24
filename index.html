@@ -6,114 +6,15 @@
   <title>Vastra Sundari | Luxury Gujarati Chaniya Choli</title>
   <meta name="description" content="Vastra Sundari — exclusive Gujarati Chaniya Choli for Navratri, weddings and festive celebrations. The Art of Traditional Elegance.">
   <meta name="theme-color" content="#641B32">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tailwind.css">
   <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
 </head>
 <body>
-
-  <!-- ============ SVG SPRITE ============ -->
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
-    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z"/></symbol>
-    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12.5H6L5 8Z"/><path d="M9 10V6.5a3 3 0 0 1 6 0V10"/></symbol>
-    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.3-3.8 4.2-5.5 7.5-5.5s6.2 1.7 7.5 5.5"/></symbol>
-    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
-    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M14 7l5 5-5 5"/></symbol>
-    <symbol id="i-motif" viewBox="0 0 40 40"><path d="M20 2 23 17 38 20 23 23 20 38 17 23 2 20 17 17Z"/><circle cx="20" cy="20" r="3"/></symbol>
-  </svg>
-
-  <!-- ============ ANNOUNCEMENT BAR ============ -->
-  <div class="announcement" role="region" aria-label="Announcement">
-    <div class="announcement__inner">
-      <svg class="announcement__motif" aria-hidden="true"><use href="#i-motif"/></svg>
-      <p>Celebrate Every Occasion in Traditional Elegance.</p>
-      <svg class="announcement__motif" aria-hidden="true"><use href="#i-motif"/></svg>
-    </div>
-  </div>
-
-  <!-- ============ HEADER ============ -->
-  <header class="header" id="header">
-    <div class="header__top container">
-      <button class="header__burger" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileNav">
-        <span></span><span></span><span></span>
-      </button>
-
-      <div class="header__spacer" aria-hidden="true"></div>
-
-      <a href="#" class="logo" aria-label="Vastra Sundari — Home">
-        <span class="logo__name">Vastra Sundari</span>
-        <span class="logo__tagline">The Art of Traditional Elegance</span>
-      </a>
-
-      <ul class="header__icons" aria-label="Shop tools">
-        <li><button class="icon-btn" id="searchOpen" aria-label="Search"><svg><use href="#i-search"/></svg></button></li>
-        <li class="hide-sm"><a class="icon-btn" href="#" aria-label="Wishlist"><svg><use href="#i-heart"/></svg><span class="icon-btn__count">0</span></a></li>
-        <li><a class="icon-btn" href="#" aria-label="Shopping bag, 0 items"><svg><use href="#i-bag"/></svg><span class="icon-btn__count">0</span></a></li>
-        <li class="hide-sm"><a class="icon-btn" href="#" aria-label="Account"><svg><use href="#i-user"/></svg></a></li>
-      </ul>
-    </div>
-
-    <nav class="nav" aria-label="Primary">
-      <ul class="nav__list container">
-        <li><a href="#" class="nav__link is-active" aria-current="page">Home</a></li>
-        <li><a href="#new-arrivals" class="nav__link">New Arrivals</a></li>
-        <li><a href="#chaniya-choli" class="nav__link">Chaniya Choli</a></li>
-        <li><a href="#navratri" class="nav__link">Navratri Collection</a></li>
-        <li><a href="#bridal" class="nav__link">Bridal Collection</a></li>
-        <li><a href="#festive" class="nav__link">Festive Collection</a></li>
-        <li><a href="#about" class="nav__link">About Us</a></li>
-        <li><a href="#contact" class="nav__link">Contact</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <!-- ============ MOBILE NAV DRAWER ============ -->
-  <div class="drawer" id="mobileNav" aria-hidden="true">
-    <div class="drawer__scrim" data-close-drawer></div>
-    <aside class="drawer__panel" role="dialog" aria-modal="true" aria-label="Menu">
-      <div class="drawer__head">
-        <span class="logo__name">Vastra Sundari</span>
-        <button class="icon-btn" data-close-drawer aria-label="Close menu"><svg><use href="#i-close"/></svg></button>
-      </div>
-      <ul class="drawer__list">
-        <li><a href="#">Home</a></li>
-        <li><a href="#new-arrivals">New Arrivals</a></li>
-        <li><a href="#chaniya-choli">Chaniya Choli</a></li>
-        <li><a href="#navratri">Navratri Collection</a></li>
-        <li><a href="#bridal">Bridal Collection</a></li>
-        <li><a href="#festive">Festive Collection</a></li>
-        <li><a href="#about">About Us</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-      <div class="drawer__foot">
-        <a href="#"><svg><use href="#i-heart"/></svg> Wishlist</a>
-        <a href="#"><svg><use href="#i-user"/></svg> My Account</a>
-      </div>
-    </aside>
-  </div>
-
-  <!-- ============ SEARCH OVERLAY ============ -->
-  <div class="search" id="searchOverlay" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Search">
-    <button class="icon-btn search__close" id="searchClose" aria-label="Close search"><svg><use href="#i-close"/></svg></button>
-    <form class="search__form" role="search" onsubmit="return false;">
-      <label for="searchInput" class="eyebrow">Search the Collection</label>
-      <div class="search__field">
-        <input id="searchInput" type="search" placeholder="Bandhani, mirror work, bridal lehenga choli…" autocomplete="off">
-        <button type="submit" aria-label="Submit search"><svg><use href="#i-search"/></svg></button>
-      </div>
-      <div class="search__tags">
-        <span>Popular:</span>
-        <a href="#">Navratri Chaniya Choli</a>
-        <a href="#">Kutchi Mirror Work</a>
-        <a href="#">Bridal Gharchola</a>
-        <a href="#">Bandhani</a>
-        <a href="#">Patola Silk</a>
-      </div>
-    </form>
-  </div>
+  <script src="assets/js/layout.js" data-part="header"></script>
 
   <main>
     <!-- ============ HERO ============ -->
@@ -122,8 +23,8 @@
         <!--
           HERO PHOTOGRAPHY
           Place your full-length editorial image at: assets/images/hero-chaniya-choli.jpg
-          Recommended: 2400×1600+ (landscape), model positioned right-of-centre,
-          heritage architecture or studio backdrop. A designed fallback shows until it exists.
+          Recommended: 2400×1600+ (landscape), model positioned right-of-centre.
+          A designed fallback shows until it exists.
         -->
         <img class="hero__img" src="assets/images/hero-chaniya-choli.jpg"
              alt="Model in an exquisitely embroidered Gujarati Chaniya Choli against heritage architecture"
@@ -131,7 +32,6 @@
              onerror="this.remove(); document.querySelector('.hero').classList.add('hero--fallback');">
         <div class="hero__veil" aria-hidden="true"></div>
 
-        <!-- Fallback art: jharokha arch + bandhani dots, visible only without a photo -->
         <div class="hero__art" aria-hidden="true">
           <svg class="hero__arch" viewBox="0 0 400 560" preserveAspectRatio="xMidYMax meet">
             <defs>
@@ -161,20 +61,17 @@
             <span class="eyebrow__rule" aria-hidden="true"></span>
             Navratri &amp; Bridal Edit 2026
           </p>
-          <h1 class="hero__title reveal" id="heroTitle">
-            Elegance Woven <em>in Tradition</em>
-          </h1>
+          <h1 class="hero__title reveal" id="heroTitle">Elegance Woven <em>in Tradition</em></h1>
           <p class="hero__sub reveal">
             Discover the timeless beauty of Gujarati Chaniya Choli, crafted to celebrate every special moment.
           </p>
           <div class="hero__ctas reveal">
-            <a href="#chaniya-choli" class="btn btn--gold">
+            <a href="shop.html" class="btn btn--gold">
               Explore Collection
               <svg aria-hidden="true"><use href="#i-arrow"/></svg>
             </a>
-            <a href="#new-arrivals" class="btn btn--ghost">Discover New Arrivals</a>
+            <a href="shop.html?new=1" class="btn btn--ghost">Discover New Arrivals</a>
           </div>
-
           <ul class="hero__marks reveal" aria-label="Craftsmanship">
             <li><strong>Hand</strong><span>Embroidered</span></li>
             <li><strong>Kutchi</strong><span>Mirror Work</span></li>
@@ -183,19 +80,101 @@
         </div>
       </div>
 
-      <a href="#new-arrivals" class="hero__scroll" aria-label="Scroll to collections">
+      <a href="#collections" class="hero__scroll" aria-label="Scroll to collections">
         <span>Scroll</span>
         <i aria-hidden="true"></i>
       </a>
-
       <div class="hero__border" aria-hidden="true"></div>
     </section>
 
-    <!-- Anchor targets for upcoming sections -->
-    <div id="new-arrivals"></div>
-    <div id="chaniya-choli"></div>
+    <!-- ============ COLLECTIONS ============ -->
+    <section class="section" id="collections" aria-labelledby="collectionsTitle">
+      <div class="container">
+        <div class="section__head">
+          <p class="eyebrow">Our Collections</p>
+          <h2 class="section__title" id="collectionsTitle">Crafted for <em>Every Celebration</em></h2>
+        </div>
+        <div class="collections">
+          <a class="collection-tile" href="shop.html?collection=navratri">
+            <span class="collection-tile__num">i.</span>
+            <h3>Navratri</h3>
+            <p>Vibrant mirror work and bandhani made for nine nights of garba.</p>
+            <span class="link">Shop Navratri <svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+          </a>
+          <a class="collection-tile" href="shop.html?collection=bridal">
+            <span class="collection-tile__num">ii.</span>
+            <h3>Bridal</h3>
+            <p>Heirloom craftsmanship for the most cherished day.</p>
+            <span class="link">Shop Bridal <svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+          </a>
+          <a class="collection-tile" href="shop.html?collection=festive">
+            <span class="collection-tile__num">iii.</span>
+            <h3>Festive</h3>
+            <p>Graceful silhouettes for Diwali, weddings and every celebration.</p>
+            <span class="link">Shop Festive <svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ NEW ARRIVALS (live from Supabase) ============ -->
+    <section class="section" style="padding-top:0" id="new-arrivals" aria-labelledby="newTitle">
+      <div class="container">
+        <div class="section__head">
+          <p class="eyebrow">Just Arrived</p>
+          <h2 class="section__title" id="newTitle">New <em>Arrivals</em></h2>
+          <p class="section__lead">Fresh from our artisans — the latest Chaniya Choli designs.</p>
+        </div>
+        <div id="homeProducts" class="product-grid" aria-live="polite"></div>
+        <div class="section__cta"><a href="shop.html" class="vs-btn vs-btn--outline">View All Chaniya Choli</a></div>
+      </div>
+    </section>
+
+    <!-- ============ ABOUT ============ -->
+    <section class="section about" id="about" aria-labelledby="aboutTitle">
+      <div class="container about__grid">
+        <div>
+          <p class="eyebrow">About Vastra Sundari</p>
+          <h2 class="section__title" id="aboutTitle" style="margin-bottom:28px">The Art of <em>Traditional Elegance</em></h2>
+          <blockquote class="about__quote">“Every Chaniya Choli carries the colours, stories and celebrations of Gujarat.”</blockquote>
+        </div>
+        <div class="about__body">
+          <p>Vastra Sundari is devoted to one craft alone — the Chaniya Choli. From the swirling garba nights of Navratri to the sacred moments of a wedding, each piece is created to honour Gujarat's royal heritage.</p>
+          <p>We work with skilled artisans whose hands keep alive the traditions of Kutchi mirror work, bandhani and intricate hand embroidery, bringing them together with refined, contemporary silhouettes.</p>
+          <div class="about__pillars">
+            <div><strong>Artisan Made</strong><span>Traditional techniques, passed down generations.</span></div>
+            <div><strong>Exclusively Ethnic</strong><span>Only Chaniya Choli — nothing else.</span></div>
+            <div><strong>Cash on Delivery</strong><span>Pay when your order arrives.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
+  <script src="assets/js/layout.js" data-part="footer"></script>
   <script src="assets/js/main.js" defer></script>
+  <script type="module">
+    import { sb, isConfigured, NOT_CONFIGURED_HTML } from "./assets/js/lib/supabase.js";
+    import { productCard, PRODUCT_CARD_SELECT } from "./assets/js/lib/util.js";
+
+    const grid = document.getElementById("homeProducts");
+    if (!isConfigured) {
+      grid.outerHTML = NOT_CONFIGURED_HTML;
+    } else {
+      const { data, error } = await sb.from("products")
+        .select(PRODUCT_CARD_SELECT)
+        .eq("is_active", true)
+        .order("is_new_arrival", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(8);
+      if (error) {
+        grid.outerHTML = `<p class="vs-empty text-sm text-charcoal/60">We couldn't load the collection right now. Please refresh the page.</p>`;
+      } else if (!data.length) {
+        grid.outerHTML = `<div class="vs-empty"><p class="font-display text-2xl text-burgundy">New designs arriving soon</p></div>`;
+      } else {
+        grid.innerHTML = data.map(productCard).join("");
+      }
+    }
+  </script>
 </body>
 </html>

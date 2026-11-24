@@ -1,6 +1,7 @@
 (() => {
   const body = document.body;
   const header = document.getElementById('header');
+  if (!header) return;
 
   // Entrance animations
   requestAnimationFrame(() => body.classList.add('is-loaded'));
@@ -9,6 +10,21 @@
   const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 40);
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Bag & wishlist counters (read straight from localStorage)
+  const read = (k) => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } };
+  const setCount = (sel, n) => document.querySelectorAll(sel).forEach((el) => {
+    el.textContent = n > 99 ? '99+' : String(n);
+    el.hidden = n === 0;
+  });
+  const refreshCounts = () => {
+    setCount('[data-cart-count]', read('vs_cart_v1').reduce((n, i) => n + (Number(i.qty) || 0), 0));
+    setCount('[data-wish-count]', read('vs_wishlist_v1').length);
+  };
+  refreshCounts();
+  window.addEventListener('cart:change', refreshCounts);
+  window.addEventListener('wishlist:change', refreshCounts);
+  window.addEventListener('storage', refreshCounts);
 
   // Generic overlay helper (mobile drawer + search)
   const overlay = (el, trigger, focusTarget) => {

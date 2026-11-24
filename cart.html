@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Bag | Vastra Sundari</title>
+  <meta name="theme-color" content="#641B32">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tailwind.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+</head>
+<body>
+  <script src="assets/js/layout.js" data-part="header"></script>
+
+  <main>
+    <header class="vs-page-head"><h1 class="vs-page-title">Shopping Bag</h1></header>
+    <div class="container py-10 md:py-14" id="cartRoot"></div>
+  </main>
+
+  <script src="assets/js/layout.js" data-part="footer"></script>
+  <script src="assets/js/main.js" defer></script>
+  <script type="module">
+    import { sb, isConfigured } from "./assets/js/lib/supabase.js";
+    import { esc, inr, imageFallback } from "./assets/js/lib/util.js";
+    import { getCart, setQty, removeFromCart, replaceCart } from "./assets/js/lib/cart.js";
+
+    const root = document.getElementById("cartRoot");
+    let notices = [];
+
+    // Sync bag with live prices & stock so the customer sees the real total.
+    async function refreshFromDb() {
+      const items = getCart();
+      if (!isConfigured || !items.length) return;
+      const { data, error } = await sb.from("product_sizes")
+        .select("id, size_label, stock, products(id, slug, name, price, is_active, product_images(image_url, sort_order))")
+        .in("id", items.map((i) => i.sizeId));
+      if (error) return;
+      const byId = Object.fromEntries(data.map((r) => [r.id, r]));
+      const next = [];
+      for (const it of items) {
+        const row = byId[it.sizeId];
+        if (!row || !row.products?.is_active || row.stock < 1) {
+          notices.push(`${it.name} (${it.size}) is no longer available and was removed.`);
+          continue;
+        }
+        const p = row.products;
+        const qty = Math.min(it.qty, row.stock, 10);
+        if (qty < it.qty) notices.push(`Only ${row.stock} of ${p.name} (${row.size_label}) available — quantity updated.`);
+        if (Number(p.price) !== Number(it.price)) notices.push(`The price of ${p.name} has been updated.`);
+        const img = [...p.product_images].sort((a, b) => a.sort_order - b.sort_order)[0]?.image_url || "";
+        next.push({ ...it, name: p.name, slug: p.slug, size: row.size_label, price: Number(p.price), image: img, qty, maxStock: row.stock });
+      }
+      replaceCart(next);
+    }
+
+    function render() {
+      const items = getCart();
+      const subtotal = items.reduce((n, i) => n + i.price * i.qty, 0);
+      const noticeHtml = notices.length ? `<div class="vs-note mb-6">${notices.map(esc).join("<br>")}</div>` : "";
+
+      if (!items.length) {
+        root.innerHTML = noticeHtml + `<div class="vs-empty"><p class="font-display text-3xl text-burgundy">Your bag is empty</p>
+          <p class="mt-2 text-sm text-charcoal/60">Discover handcrafted Chaniya Choli for every celebration.</p>
+          <a href="shop.html" class="vs-btn vs-btn--primary mt-8">Explore Collection</a></div>`;
+        return;
+      }
+
+      root.innerHTML = noticeHtml + `
+        <div class="grid gap-10 lg:grid-cols-[1fr_380px]">
+          <ul class="divide-y divide-charcoal/10 border-y border-charcoal/10">
+            ${items.map((i) => `
+              <li class="flex gap-4 py-5 md:gap-6">
+                <a href="product.html?slug=${encodeURIComponent(i.slug)}" class="block aspect-[3/4] w-24 shrink-0 overflow-hidden bg-[#f1ead9] md:w-28">
+                  ${i.image ? `<img src="${esc(i.image)}" alt="" class="h-full w-full object-cover">` : imageFallback(i.name)}
+                </a>
+                <div class="flex flex-1 flex-col">
+                  <div class="flex justify-between gap-4">
+                    <div>
+                      <a href="product.html?slug=${encodeURIComponent(i.slug)}" class="font-display text-lg leading-snug hover:text-maroon">${esc(i.name)}</a>
+                      <p class="mt-1 text-xs uppercase tracking-[.15em] text-charcoal/55">Size: ${esc(i.size)}</p>
+                    </div>
+                    <p class="whitespace-nowrap font-medium text-burgundy">${inr(i.price * i.qty)}</p>
+                  </div>
+                  <div class="mt-auto flex items-center justify-between pt-4">
+                    <div class="vs-qty">
+                      <button data-act="dec" data-id="${esc(i.sizeId)}" aria-label="Decrease" ${i.qty <= 1 ? "disabled" : ""}>−</button>
+                      <span>${i.qty}</span>
+                      <button data-act="inc" data-id="${esc(i.sizeId)}" aria-label="Increase" ${i.qty >= Math.min(10, i.maxStock ?? 10) ? "disabled" : ""}>+</button>
+                    </div>
+                    <button data-act="rm" data-id="${esc(i.sizeId)}" class="text-xs uppercase tracking-[.15em] text-charcoal/55 underline-offset-4 hover:text-maroon hover:underline">Remove</button>
+                  </div>
+                </div>
+              </li>`).join("")}
+          </ul>
+
+          <aside class="h-fit bg-white p-6 ring-1 ring-gold/30 md:p-8">
+            <h2 class="font-display text-2xl text-burgundy">Order Summary</h2>
+            <dl class="mt-6 space-y-3 text-sm">
+              <div class="flex justify-between"><dt class="text-charcoal/70">Subtotal</dt><dd>${inr(subtotal)}</dd></div>
+              <div class="flex justify-between"><dt class="text-charcoal/70">Shipping</dt><dd>Complimentary</dd></div>
+              <div class="flex justify-between border-t border-charcoal/10 pt-4 text-base font-medium"><dt>Total</dt><dd class="text-burgundy">${inr(subtotal)}</dd></div>
+            </dl>
+            <a href="checkout.html" class="vs-btn vs-btn--primary mt-6 w-full">Proceed to Checkout</a>
+            <p class="mt-4 text-center text-xs text-charcoal/55">Pay with Cash on Delivery</p>
+          </aside>
+        </div>`;
+    }
+
+    root.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-act]");
+      if (!b) return;
+      const it = getCart().find((i) => i.sizeId === b.dataset.id);
+      if (!it) return;
+      notices = [];
+      if (b.dataset.act === "rm") removeFromCart(it.sizeId);
+      if (b.dataset.act === "dec") setQty(it.sizeId, it.qty - 1);
+      if (b.dataset.act === "inc") setQty(it.sizeId, Math.min(it.qty + 1, it.maxStock ?? 10));
+      render();
+    });
+
+    render();
+    await refreshFromDb();
+    render();
+  </script>
+</body>
+</html>

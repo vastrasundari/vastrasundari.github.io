@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wishlist | Vastra Sundari</title>
+  <meta name="theme-color" content="#641B32">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tailwind.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+</head>
+<body>
+  <script src="assets/js/layout.js" data-part="header"></script>
+  <main>
+    <header class="vs-page-head"><h1 class="vs-page-title">Wishlist</h1></header>
+    <div class="container py-10 md:py-14"><div id="wishGrid" class="product-grid"></div></div>
+  </main>
+  <script src="assets/js/layout.js" data-part="footer"></script>
+  <script src="assets/js/main.js" defer></script>
+  <script type="module">
+    import { sb, isConfigured, NOT_CONFIGURED_HTML } from "./assets/js/lib/supabase.js";
+    import { productCard, PRODUCT_CARD_SELECT } from "./assets/js/lib/util.js";
+    import { getWishlist } from "./assets/js/lib/cart.js";
+
+    const grid = document.getElementById("wishGrid");
+    const slugs = getWishlist().filter((s) => /^[a-z0-9-]{1,120}$/.test(s));
+    const empty = `<div class="col-span-full vs-empty"><p class="font-display text-3xl text-burgundy">Your wishlist is empty</p>
+      <p class="mt-2 text-sm text-charcoal/60">Tap the heart on any design to save it here.</p>
+      <a href="shop.html" class="vs-btn vs-btn--primary mt-8">Explore Collection</a></div>`;
+
+    if (!slugs.length) grid.innerHTML = empty;
+    else if (!isConfigured) grid.outerHTML = NOT_CONFIGURED_HTML;
+    else {
+      const { data, error } = await sb.from("products").select(PRODUCT_CARD_SELECT).eq("is_active", true).in("slug", slugs);
+      if (error) grid.innerHTML = `<p class="col-span-full vs-empty text-sm">Couldn't load your wishlist. Please refresh.</p>`;
+      else grid.innerHTML = data.length ? slugs.map((s) => data.find((p) => p.slug === s)).filter(Boolean).map(productCard).join("") : empty;
+    }
+  </script>
+</body>
+</html>

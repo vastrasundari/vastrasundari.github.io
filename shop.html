@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop Chaniya Choli | Vastra Sundari</title>
+  <meta name="description" content="Shop handcrafted Gujarati Chaniya Choli — Navratri, Bridal and Festive collections. Cash on Delivery across India.">
+  <meta name="theme-color" content="#641B32">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tailwind.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+</head>
+<body>
+  <script src="assets/js/layout.js" data-part="header"></script>
+
+  <main>
+    <header class="vs-page-head">
+      <p class="vs-kicker" id="shopKicker">Vastra Sundari</p>
+      <h1 class="vs-page-title mt-3" id="shopTitle">Chaniya Choli</h1>
+      <p class="mx-auto mt-3 max-w-xl px-4 text-sm text-charcoal/70" id="shopBlurb">Handcrafted Gujarati Chaniya Choli for every celebration.</p>
+    </header>
+
+    <div class="container py-8 md:py-12">
+      <div class="mb-8 flex flex-col gap-4 border-b border-charcoal/10 pb-5 md:flex-row md:items-center md:justify-between">
+        <nav aria-label="Collections" class="-mx-1 flex gap-1 overflow-x-auto" id="shopTabs"></nav>
+        <div class="flex items-center gap-3">
+          <p class="whitespace-nowrap text-xs text-charcoal/60" id="shopCount" aria-live="polite"></p>
+          <label for="shopSort" class="sr-only">Sort by</label>
+          <select id="shopSort" class="vs-input !w-auto !py-2 text-sm">
+            <option value="new">Newest first</option>
+            <option value="price_asc">Price: low to high</option>
+            <option value="price_desc">Price: high to low</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="shopGrid" class="product-grid"></div>
+    </div>
+  </main>
+
+  <script src="assets/js/layout.js" data-part="footer"></script>
+  <script src="assets/js/main.js" defer></script>
+  <script type="module">
+    import { sb, isConfigured, NOT_CONFIGURED_HTML } from "./assets/js/lib/supabase.js";
+    import { productCard, PRODUCT_CARD_SELECT, COLLECTIONS, esc, qs } from "./assets/js/lib/util.js";
+
+    const params = new URLSearchParams(location.search);
+    const collection = COLLECTIONS[params.get("collection")] ? params.get("collection") : "";
+    const onlyNew = params.get("new") === "1";
+    // keep only safe characters — the term is used in a PostgREST filter
+    const q = (params.get("q") || "").replace(/[^\p{L}\p{N} -]/gu, "").trim().slice(0, 60);
+
+    const grid = document.getElementById("shopGrid");
+    const sortSel = document.getElementById("shopSort");
+    sortSel.value = ["new", "price_asc", "price_desc"].includes(params.get("sort")) ? params.get("sort") : "new";
+
+    // Heading
+    const title = document.getElementById("shopTitle");
+    const blurb = document.getElementById("shopBlurb");
+    if (q) { title.textContent = `“${q}”`; document.getElementById("shopKicker").textContent = "Search results"; blurb.textContent = ""; }
+    else if (onlyNew) { title.textContent = "New Arrivals"; blurb.textContent = "The latest designs from our artisans."; }
+    else if (collection) { title.textContent = COLLECTIONS[collection].label; blurb.textContent = COLLECTIONS[collection].blurb; }
+    document.title = `${title.textContent} | Vastra Sundari`;
+
+    // Tabs
+    const tab = (label, href, active) =>
+      `<a href="${href}" class="whitespace-nowrap px-4 py-2 text-[11px] font-medium uppercase tracking-[.18em] ${active ? "bg-burgundy text-ivory" : "text-charcoal/70 hover:text-burgundy"}">${label}</a>`;
+    document.getElementById("shopTabs").innerHTML =
+      tab("All", "shop.html", !collection && !onlyNew && !q) +
+      tab("New Arrivals", "shop.html?new=1", onlyNew) +
+      Object.entries(COLLECTIONS).map(([k, c]) => tab(c.label.replace(" Collection", ""), `shop.html?collection=${k}`, collection === k)).join("");
+
+    sortSel.addEventListener("change", () => {
+      params.set("sort", sortSel.value);
+      location.search = params.toString();
+    });
+
+    async function load() {
+      if (!isConfigured) { grid.outerHTML = NOT_CONFIGURED_HTML; return; }
+      grid.innerHTML = `<div class="col-span-full py-20 text-center text-burgundy"><span class="vs-spinner"></span></div>`;
+
+      let query = sb.from("products").select(PRODUCT_CARD_SELECT).eq("is_active", true);
+      if (collection) query = query.eq("collection", collection);
+      if (onlyNew) query = query.eq("is_new_arrival", true);
+      if (q) {
+        const like = `%${q}%`;
+        query = query.or(["name", "description", "craft", "fabric", "color"].map((c) => `${c}.ilike.${like}`).join(","));
+      }
+      if (sortSel.value === "price_asc") query = query.order("price", { ascending: true });
+      else if (sortSel.value === "price_desc") query = query.order("price", { ascending: false });
+      else query = query.order("created_at", { ascending: false });
+
+      const { data, error } = await query.limit(120);
+      if (error) {
+        grid.innerHTML = `<p class="col-span-full vs-empty text-sm text-charcoal/60">We couldn't load the collection. Please refresh the page.</p>`;
+        return;
+      }
+      document.getElementById("shopCount").textContent = `${data.length} ${data.length === 1 ? "design" : "designs"}`;
+      grid.innerHTML = data.length
+        ? data.map(productCard).join("")
+        : `<div class="col-span-full vs-empty"><p class="font-display text-2xl text-burgundy">No designs found</p>
+             <p class="mt-2 text-sm text-charcoal/60">${q ? `Nothing matched “${esc(q)}”.` : "New pieces are on their way."}</p>
+             <a href="shop.html" class="vs-btn vs-btn--outline mt-6">View all Chaniya Choli</a></div>`;
+    }
+    load();
+  </script>
+</body>
+</html>

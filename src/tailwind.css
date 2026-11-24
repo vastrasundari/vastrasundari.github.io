@@ -1,0 +1,59 @@
+/* Source for assets/css/tailwind.css — build with `npm run build:css`. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* ---------- Storefront ---------- */
+  .vs-page-head { @apply border-b border-gold/30 bg-ivory py-12 text-center md:py-16; }
+  .vs-page-title { @apply font-display text-4xl font-medium text-burgundy md:text-5xl; }
+  .vs-kicker { @apply text-[11px] font-medium uppercase tracking-[.32em] text-gold; }
+
+  .vs-card { @apply block; }
+  .vs-card__media { @apply relative aspect-[3/4] overflow-hidden bg-[#f1ead9]; }
+  .vs-card__media img { @apply h-full w-full object-cover transition-transform duration-700 ease-out; }
+  .vs-card:hover .vs-card__media img { @apply scale-105; }
+  .vs-badge { @apply absolute left-3 top-3 bg-burgundy px-2.5 py-1 text-[10px] font-medium uppercase tracking-[.18em] text-ivory; }
+  .vs-badge--muted { @apply left-auto right-3 bg-charcoal/80; }
+
+  .vs-noimg { @apply flex h-full w-full items-center justify-center bg-burgundy; background-image: radial-gradient(circle at 1px 1px, rgba(197,160,74,.22) 1px, transparent 1.5px); background-size: 18px 18px; }
+  .vs-noimg svg { @apply h-12 w-12 fill-gold/80; }
+
+  .vs-empty { @apply mx-auto max-w-md py-20 text-center; }
+
+  .vs-btn { @apply inline-flex min-h-[52px] items-center justify-center gap-3 px-8 text-[11.5px] font-medium uppercase tracking-[.22em] transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50; }
+  .vs-btn--primary { @apply bg-burgundy text-ivory hover:bg-maroon; }
+  .vs-btn--gold { @apply bg-gold text-burgundy hover:bg-burgundy hover:text-ivory; }
+  .vs-btn--outline { @apply border border-burgundy text-burgundy hover:bg-burgundy hover:text-ivory; }
+
+  .vs-label { @apply mb-1.5 block text-[11px] font-medium uppercase tracking-[.18em] text-charcoal/70; }
+  .vs-input { @apply block w-full border border-charcoal/20 bg-white px-4 py-3 text-[15px] text-charcoal outline-none transition placeholder:text-charcoal/35 focus:border-burgundy focus:ring-1 focus:ring-burgundy; }
+  .vs-input[aria-invalid="true"] { @apply border-maroon ring-1 ring-maroon; }
+  .vs-error { @apply mt-1 text-xs text-maroon; }
+
+  .vs-size { @apply min-w-[52px] border border-charcoal/25 px-3 py-2.5 text-sm transition hover:border-burgundy; }
+  .vs-size[aria-pressed="true"] { @apply border-burgundy bg-burgundy text-ivory; }
+  .vs-size:disabled { @apply cursor-not-allowed border-dashed text-charcoal/30 line-through hover:border-charcoal/25; }
+
+  .vs-qty { @apply inline-flex items-center border border-charcoal/25; }
+  .vs-qty button { @apply grid h-10 w-10 place-items-center text-lg text-charcoal/70 hover:text-burgundy disabled:opacity-30; }
+  .vs-qty span { @apply w-8 text-center text-sm; }
+
+  .vs-alert { @apply border-l-2 border-maroon bg-maroon/5 px-4 py-3 text-sm text-maroon; }
+  .vs-note { @apply border-l-2 border-gold bg-gold/10 px-4 py-3 text-sm text-charcoal; }
+  .vs-spinner { @apply inline-block h-5 w-5 animate-spin rounded-full border-2 border-current border-r-transparent; }
+
+  /* ---------- Admin ---------- */
+  .ad-card { @apply rounded-lg border border-charcoal/10 bg-white shadow-sm; }
+  .ad-btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50; }
+  .ad-btn--primary { @apply bg-burgundy text-white hover:bg-maroon; }
+  .ad-btn--ghost { @apply border border-charcoal/15 bg-white text-charcoal hover:bg-ivory; }
+  .ad-btn--danger { @apply border border-red-200 bg-white text-red-700 hover:bg-red-50; }
+  .ad-input { @apply block w-full rounded-md border border-charcoal/20 bg-white px-3 py-2 text-sm outline-none focus:border-burgundy focus:ring-1 focus:ring-burgundy; }
+  .ad-label { @apply mb-1 block text-xs font-medium text-charcoal/70; }
+  .ad-th { @apply px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-charcoal/55; }
+  .ad-td { @apply px-4 py-3 text-sm; }
+  .ad-pill { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium; }
+  .ad-nav a { @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm text-ivory/80 hover:bg-white/10 hover:text-white; }
+  .ad-nav a.is-active { @apply bg-white/15 text-white; }
+}
