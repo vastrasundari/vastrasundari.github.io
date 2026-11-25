@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /cart.html
+Disallow: /checkout.html
+Disallow: /order.html
+Disallow: /wishlist.html
+
+Sitemap: https://vastrasundari.duckdns.org/sitemap.xml

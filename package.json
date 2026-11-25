@@ -1,10 +1,11 @@
 {
   "name": "vastrasundari",
   "private": true,
-  "description": "Vastra Sundari — luxury Chaniya Choli storefront (GitHub Pages + Supabase)",
+  "description": "Vastra Sundari \u2014 luxury Chaniya Choli storefront (GitHub Pages + Supabase)",
   "scripts": {
     "build:css": "tailwindcss -i ./src/tailwind.css -o ./assets/css/tailwind.css --minify",
-    "watch:css": "tailwindcss -i ./src/tailwind.css -o ./assets/css/tailwind.css --watch"
+    "watch:css": "tailwindcss -i ./src/tailwind.css -o ./assets/css/tailwind.css --watch",
+    "sitemap": "node scripts/build-sitemap.mjs"
   },
   "devDependencies": {
     "tailwindcss": "3.4.17"

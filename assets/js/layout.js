@@ -104,7 +104,7 @@
   var FOOTER =
     '<footer class="footer" id="contact"><div class="container footer__grid">' +
     '<div class="footer__brand"><span class="logo__name">Vastra Sundari</span>' +
-    '<p>Exclusive Gujarati Chaniya Choli — handcrafted for Navratri, weddings and every festive moment.</p></div>' +
+    '<p>Jamnagar’s boutique for exclusive Gujarati Chaniya Choli — handcrafted for Navratri, weddings and every festive moment. Delivering across Jamnagar, Gujarat and India.</p></div>' +
     '<div><h4>Shop</h4><ul>' +
     '<li><a href="shop.html?new=1">New Arrivals</a></li><li><a href="shop.html?collection=navratri">Navratri</a></li>' +
     '<li><a href="shop.html?collection=bridal">Bridal</a></li><li><a href="shop.html?collection=festive">Festive</a></li></ul></div>' +

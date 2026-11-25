@@ -84,7 +84,7 @@ assets/
   js/layout.js        Shared header / nav / search / footer
   js/main.js          Header behaviour, drawer, search, counters
   js/showcase.js      Home page boutique slider (gold rail, 3D flip, autoplay, details card)
-  js/lib/             supabase client, catalog (product data), cart, helpers
+  js/lib/             supabase client, catalog (product data), seo, cart, helpers
 src/tailwind.css      Tailwind source (components)
 supabase/
   schema.sql          Tables, constraints, indexes, functions, RLS, storage bucket
@@ -281,6 +281,18 @@ To move to a purchased domain later, replace the `CNAME` file contents and updat
 **Home page showcase:** the top of the home page hangs up to 14 live products on a gold rail (featured products first, then newest). Clicking a garment, the arrows, the dots, a thumbnail or a swipe moves that garment to the centre with a 3D flip; it also advances by itself every 5 seconds (paused on hover, after a manual choice, off screen, or with the Pause button; off for reduced-motion users). Products marked **Featured** show a *Bestseller* badge, others marked *New arrival* show *New Arrival*; *Fabric* and *Craft* appear as Fabric / Work. The first photo of each product is the hanging garment, so a **portrait photo of the outfit alone on a transparent (PNG/WebP) or plain light background** looks best; the details panel uses the other photos too.
 
 ---
+
+## SEO (Jamnagar)
+
+The site is set up to rank for searches such as *chaniya choli in Jamnagar*, *Navratri chaniya choli Jamnagar* and *bridal chaniya choli Jamnagar*:
+
+- Page titles, descriptions and the home page heading target Jamnagar; product and collection pages set their own titles, canonical URLs and share tags (`assets/js/lib/seo.js`).
+- Structured data: `ClothingStore` (Jamnagar, phone, COD & UPI), `WebSite` with site search, `FAQPage`, `Product` with price and stock, and breadcrumbs.
+- A Jamnagar section with local areas, a Gujarati paragraph and FAQs on the home page.
+- `robots.txt` keeps cart, checkout, orders, wishlist and admin out of search; `sitemap.xml` lists every page and product. **After adding or removing products run `npm run sitemap` and push.**
+- `assets/images/og-image.jpg` is the preview shown when the site is shared on WhatsApp / Facebook.
+
+Off-site steps that matter most for local ranking: verify the site in **Google Search Console** and submit the sitemap, and create a **Google Business Profile** for Vastra Sundari in Jamnagar with the same name, phone and website.
 
 ## Using the admin panel
 

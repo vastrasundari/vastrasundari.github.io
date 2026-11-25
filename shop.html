@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-IN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shop Chaniya Choli | Vastra Sundari</title>
-  <meta name="description" content="Shop handcrafted Gujarati Chaniya Choli — Navratri, Bridal and Festive collections. Cash on Delivery across India.">
+  <title>Buy Chaniya Choli Online in Jamnagar | Vastra Sundari</title>
+  <meta name="description" content="Shop handcrafted Chaniya Choli online in Jamnagar – Navratri, bridal and festive designs with mirror work and bandhani. Free delivery, Cash on Delivery &amp; UPI.">
+  <link rel="canonical" href="https://vastrasundari.duckdns.org/shop.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Vastra Sundari">
+  <meta property="og:image" content="https://vastrasundari.duckdns.org/assets/images/og-image.jpg">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#641B32">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +23,7 @@
 
   <main>
     <header class="vs-page-head">
-      <p class="vs-kicker" id="shopKicker">Vastra Sundari</p>
+      <p class="vs-kicker" id="shopKicker">Vastra Sundari · Jamnagar</p>
       <h1 class="vs-page-title mt-3" id="shopTitle">Chaniya Choli</h1>
       <p class="mx-auto mt-3 max-w-xl px-4 text-sm text-charcoal/70" id="shopBlurb">Handcrafted Gujarati Chaniya Choli for every celebration.</p>
     </header>
@@ -46,6 +51,7 @@
   <script type="module">
     import { sb, isConfigured, NOT_CONFIGURED_HTML } from "./assets/js/lib/supabase.js";
     import { productCard, PRODUCT_CARD_SELECT, COLLECTIONS, esc, qs } from "./assets/js/lib/util.js";
+    import { setPageMeta, setJsonLd, SITE } from "./assets/js/lib/seo.js";
 
     const params = new URLSearchParams(location.search);
     const collection = COLLECTIONS[params.get("collection")] ? params.get("collection") : "";
@@ -63,7 +69,30 @@
     if (q) { title.textContent = `“${q}”`; document.getElementById("shopKicker").textContent = "Search results"; blurb.textContent = ""; }
     else if (onlyNew) { title.textContent = "New Arrivals"; blurb.textContent = "The latest designs from our artisans."; }
     else if (collection) { title.textContent = COLLECTIONS[collection].label; blurb.textContent = COLLECTIONS[collection].blurb; }
-    document.title = `${title.textContent} | Vastra Sundari`;
+    // Search-engine tags: each collection is its own indexable page aimed at Jamnagar shoppers
+    const SEO = {
+      navratri: ["Navratri Chaniya Choli in Jamnagar | Garba Chaniya Choli – Vastra Sundari",
+        "Navratri Chaniya Choli in Jamnagar – mirror work and bandhani designs made for garba nights. Free delivery, COD & UPI."],
+      bridal: ["Bridal Chaniya Choli in Jamnagar | Wedding Chaniya Choli – Vastra Sundari",
+        "Bridal Chaniya Choli in Jamnagar – heavily embroidered zari, zardozi and mirror-work designs for weddings. Free delivery, COD & UPI."],
+      festive: ["Festive Chaniya Choli in Jamnagar | Diwali & Wedding Wear – Vastra Sundari",
+        "Festive Chaniya Choli in Jamnagar for Diwali, weddings and celebrations. Handcrafted designs, free delivery, COD & UPI."],
+    };
+    if (q) {
+      document.title = `“${q}” – Chaniya Choli search | Vastra Sundari`;
+      const robots = document.createElement("meta"); robots.name = "robots"; robots.content = "noindex, follow"; document.head.append(robots);
+    } else if (collection) {
+      setPageMeta({ title: SEO[collection][0], description: SEO[collection][1], path: `shop.html?collection=${collection}` });
+    } else if (onlyNew) {
+      setPageMeta({ title: "New Arrival Chaniya Choli in Jamnagar | Vastra Sundari",
+        description: "The latest Chaniya Choli designs at Vastra Sundari, Jamnagar – new Navratri, bridal and festive arrivals. Free delivery, COD & UPI.", path: "shop.html?new=1" });
+    } else {
+      setPageMeta({ title: document.title, description: document.querySelector('meta[name="description"]').content, path: "shop.html" });
+    }
+    setJsonLd("breadcrumb", { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE + "/" },
+      { "@type": "ListItem", position: 2, name: collection ? COLLECTIONS[collection].label : "Chaniya Choli", item: SITE + "/shop.html" + (collection ? `?collection=${collection}` : "") },
+    ] });
 
     // Tabs
     const tab = (label, href, active) =>

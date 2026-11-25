@@ -1,9 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-IN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chaniya Choli | Vastra Sundari</title>
+  <title>Chaniya Choli in Jamnagar | Vastra Sundari</title>
+  <meta name="description" content="Handcrafted Chaniya Choli from Vastra Sundari, Jamnagar. Free delivery, Cash on Delivery &amp; UPI.">
+  <meta property="og:type" content="product">
+  <meta property="og:site_name" content="Vastra Sundari">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#641B32">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,11 +29,13 @@
     import { sb, isConfigured, NOT_CONFIGURED_HTML } from "./assets/js/lib/supabase.js";
     import { esc, inr, qs, COLLECTIONS, imageFallback } from "./assets/js/lib/util.js";
     import { addToCart, inWishlist, toggleWishlist } from "./assets/js/lib/cart.js";
+    import { setPageMeta, setJsonLd, excerpt, SITE } from "./assets/js/lib/seo.js";
 
     const root = document.getElementById("pdp");
     const slug = (qs("slug") || "").toLowerCase();
 
     const notFound = () => {
+      const robots = document.createElement("meta"); robots.name = "robots"; robots.content = "noindex"; document.head.append(robots);
       root.innerHTML = `<div class="vs-empty"><p class="font-display text-3xl text-burgundy">Design not found</p>
         <p class="mt-2 text-sm text-charcoal/60">This piece may no longer be available.</p>
         <a href="shop.html" class="vs-btn vs-btn--outline mt-6">Browse the collection</a></div>`;
@@ -46,10 +52,41 @@
     }
 
     function render(p) {
-      document.title = `${p.name} | Vastra Sundari`;
       const imgs = [...p.product_images].sort((a, b) => a.sort_order - b.sort_order);
       const sizes = [...p.product_sizes].sort((a, b) => a.sort_order - b.sort_order);
       const col = COLLECTIONS[p.collection];
+
+      // Search-engine tags + Product rich result (price, stock, brand) for Google Shopping
+      const path = `product.html?slug=${encodeURIComponent(p.slug)}`;
+      const inStock = sizes.some((s) => s.stock > 0);
+      setPageMeta({
+        title: `${p.name} – Buy in Jamnagar | Vastra Sundari`,
+        description: excerpt(`${p.name}${p.craft ? ` with ${p.craft}` : ""} – ₹${Number(p.price).toLocaleString("en-IN")}. ${p.description || "Handcrafted Chaniya Choli"}. Free delivery in Jamnagar & across India, COD & UPI.`),
+        path, image: imgs[0]?.image_url, type: "product",
+      });
+      setJsonLd("product", {
+        "@context": "https://schema.org", "@type": "Product",
+        name: p.name, sku: p.slug, url: SITE + "/" + path,
+        description: p.description || `${p.name} – handcrafted Gujarati Chaniya Choli.`,
+        image: imgs.map((i) => i.image_url),
+        brand: { "@type": "Brand", name: "Vastra Sundari" },
+        category: "Apparel & Accessories > Clothing > Traditional & Ceremonial Clothing",
+        ...(p.fabric ? { material: p.fabric } : {}),
+        ...(p.color ? { color: p.color } : {}),
+        offers: {
+          "@type": "Offer", url: SITE + "/" + path, priceCurrency: "INR", price: Number(p.price).toFixed(2),
+          availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          itemCondition: "https://schema.org/NewCondition",
+          seller: { "@type": "Organization", name: "Vastra Sundari", "@id": SITE + "/#store" },
+          shippingDetails: { "@type": "OfferShippingDetails", shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "INR" },
+            shippingDestination: { "@type": "DefinedRegion", addressCountry: "IN" } },
+        },
+      });
+      setJsonLd("breadcrumb", { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: SITE + "/" },
+        { "@type": "ListItem", position: 2, name: col?.label || "Chaniya Choli", item: SITE + `/shop.html?collection=${p.collection}` },
+        { "@type": "ListItem", position: 3, name: p.name, item: SITE + "/" + path },
+      ] });
       const details = [["Fabric", p.fabric], ["Craft", p.craft], ["Colour", p.color], ["Collection", col?.label]].filter(([, v]) => v);
       let selected = null;
       let qty = 1;

@@ -892,3 +892,39 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; margin: 0; }
   .showcase.is-ready .hang, .showcase__panel { transition: none; }
   .hang__swing, .hang__garment { animation: none !important; }
 }
+
+/* ---------- Showcase kicker (part of the page h1) ---------- */
+.showcase__kicker {
+  display: block; margin-bottom: 8px;
+  font-family: var(--font-body); font-style: normal; font-size: 11px; font-weight: 500;
+  letter-spacing: .24em; text-transform: uppercase; color: var(--burgundy);
+}
+
+/* ---------- Jamnagar (local) section + FAQ ---------- */
+.local { background: #fff; border-top: 1px solid rgba(197, 160, 74, .25); border-bottom: 1px solid rgba(197, 160, 74, .25); }
+.local__grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(32px, 5vw, 72px); align-items: start; }
+.local p { margin: 0 0 14px; font-size: 15px; line-height: 1.75; color: rgba(37, 35, 35, .8); }
+.local__lead { font-size: 16.5px !important; color: var(--charcoal) !important; }
+.local__gu { padding: 12px 16px; border-left: 2px solid var(--gold); background: var(--ivory); font-family: "Noto Sans Gujarati", "Shruti", system-ui, sans-serif; font-size: 17px !important; line-height: 1.8 !important; }
+.local__links { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; padding: 0; list-style: none; }
+.local__links a {
+  display: inline-block; padding: 9px 16px; border: 1px solid rgba(100, 27, 50, .3);
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--burgundy);
+  transition: background .25s var(--ease), color .25s var(--ease);
+}
+.local__links a:hover { background: var(--burgundy); color: var(--ivory); }
+.local__areas { font-size: 13.5px !important; }
+.faq__title { margin: 0 0 14px; font-family: var(--font-display); font-weight: 500; font-size: 24px; color: var(--burgundy); }
+.faq__item { border-bottom: 1px solid rgba(37, 35, 35, .1); }
+.faq__item summary {
+  position: relative; padding: 16px 32px 16px 0; cursor: pointer; list-style: none;
+  font-family: var(--font-display); font-size: 17px; color: var(--charcoal);
+}
+.faq__item summary::-webkit-details-marker { display: none; }
+.faq__item summary::after {
+  content: "+"; position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-body); font-size: 20px; color: var(--gold); transition: transform .3s var(--ease);
+}
+.faq__item[open] summary::after { transform: translateY(-50%) rotate(45deg); }
+.faq__item p { padding: 0 0 16px; font-size: 14.5px !important; }
+@media (max-width: 900px) { .local__grid { grid-template-columns: 1fr; } }
