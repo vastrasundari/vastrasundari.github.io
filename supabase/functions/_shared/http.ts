@@ -69,7 +69,11 @@ export function friendlyDbError(message: string): { status: number; error: strin
     INVALID_TRANSITION: [409, "That status change is not allowed from the order's current status."],
     CANCEL_REASON_REQUIRED: [400, "Please enter a reason for cancelling."],
     PAYMENT_UNCHANGED: [409, "Payment status is already set to that value."],
-    ORDER_CANCELLED: [409, "A cancelled order cannot be marked as paid."],
+    ORDER_CANCELLED: [409, "This order has been cancelled."],
+    INVALID_PAYMENT_METHOD: [400, "Please choose a payment method."],
+    NOT_UPI_ORDER: [409, "This order is not a UPI order."],
+    ALREADY_PAID: [409, "Payment for this order has already been confirmed."],
+    INVALID_UPI_REF: [400, "Please enter the 12-digit UPI reference number (UTR)."],
   };
   for (const [code, [status, error]] of Object.entries(map)) {
     if (m.includes(code)) return { status, error };

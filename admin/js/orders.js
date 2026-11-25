@@ -1,6 +1,6 @@
 // Orders list + order detail with status / payment management.
 import { sb, callFunction } from "../../assets/js/lib/supabase.js";
-import { esc, inr, formatDate, STATUS_LABEL, PAYMENT_LABEL } from "../../assets/js/lib/util.js";
+import { esc, inr, formatDate, STATUS_LABEL, PAYMENT_LABEL, PAYMENT_METHOD_LABEL, PAYMENT_METHOD_SHORT } from "../../assets/js/lib/util.js";
 import { accessToken, toast } from "./app.js";
 
 const STATUS_STYLE = {
@@ -11,8 +11,11 @@ const STATUS_STYLE = {
   cancelled: "bg-red-100 text-red-800",
 };
 export const statusPill = (s) => `<span class="ad-pill ${STATUS_STYLE[s] || ""}">${STATUS_LABEL[s] || esc(s)}</span>`;
-export const paymentPill = (p) =>
-  `<span class="ad-pill ${p === "paid" ? "bg-green-100 text-green-800" : "bg-charcoal/10 text-charcoal/70"}">COD · ${PAYMENT_LABEL[p] || esc(p)}</span>`;
+export const paymentPill = (p, method = "cod", upiRef = null) => {
+  const verify = method === "upi" && p === "pending" && upiRef;
+  const cls = p === "paid" ? "bg-green-100 text-green-800" : verify ? "bg-amber-100 text-amber-800" : "bg-charcoal/10 text-charcoal/70";
+  return `<span class="ad-pill ${cls}">${PAYMENT_METHOD_SHORT[method] || esc(method)} · ${verify ? "Verify UTR" : PAYMENT_LABEL[p] || esc(p)}</span>`;
+};
 
 const PAGE_SIZE = 25;
 
@@ -25,7 +28,7 @@ export async function renderOrders(view, params) {
   const page = Math.max(1, parseInt(params.get("page") || "1", 10) || 1);
 
   let query = sb.from("orders")
-    .select("id, order_number, customer_name, customer_phone, customer_email, city, total, status, payment_status, created_at, order_items(quantity)", { count: "exact" })
+    .select("id, order_number, customer_name, customer_phone, customer_email, city, total, status, payment_status, payment_method, upi_ref, created_at, order_items(quantity)", { count: "exact" })
     .order("created_at", { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
   if (status) query = query.eq("status", status);
@@ -81,7 +84,7 @@ export async function renderOrders(view, params) {
             <td class="ad-td whitespace-nowrap text-charcoal/70">${formatDate(o.created_at)}</td>
             <td class="ad-td">${o.order_items.reduce((n, i) => n + i.quantity, 0)}</td>
             <td class="ad-td">${statusPill(o.status)}</td>
-            <td class="ad-td">${paymentPill(o.payment_status)}</td>
+            <td class="ad-td">${paymentPill(o.payment_status, o.payment_method, o.upi_ref)}</td>
             <td class="ad-td text-right font-medium">${inr(o.total)}</td></tr>`).join("")}
         </tbody></table></div>`
       : `<p class="p-10 text-center text-sm text-charcoal/55">No orders found.</p>`}
@@ -130,7 +133,7 @@ export async function renderOrderDetail(view, id) {
     <a href="#/orders" class="text-sm text-charcoal/60 hover:text-burgundy">← All orders</a>
     <div class="mb-6 mt-2 flex flex-wrap items-center gap-3">
       <h1 class="font-display text-2xl text-burgundy">${esc(o.order_number)}</h1>
-      ${statusPill(o.status)} ${paymentPill(o.payment_status)}
+      ${statusPill(o.status)} ${paymentPill(o.payment_status, o.payment_method, o.upi_ref)}
       <span class="text-sm text-charcoal/55">Placed ${formatDate(o.created_at)}</span>
     </div>
 
@@ -153,7 +156,7 @@ export async function renderOrderDetail(view, id) {
           <dl class="space-y-1 border-t border-charcoal/10 px-5 py-4 text-sm">
             <div class="flex justify-between"><dt class="text-charcoal/60">Subtotal</dt><dd>${inr(o.subtotal)}</dd></div>
             <div class="flex justify-between"><dt class="text-charcoal/60">Shipping</dt><dd>${inr(o.shipping_fee)}</dd></div>
-            <div class="flex justify-between pt-1 text-base font-semibold"><dt>Total (Cash on Delivery)</dt><dd class="text-burgundy">${inr(o.total)}</dd></div>
+            <div class="flex justify-between pt-1 text-base font-semibold"><dt>Total (${PAYMENT_METHOD_LABEL[o.payment_method] || "Cash on Delivery"})</dt><dd class="text-burgundy">${inr(o.total)}</dd></div>
           </dl>
         </section>
 
@@ -226,11 +229,17 @@ export async function renderOrderDetail(view, id) {
         </section>
 
         <section class="ad-card p-5">
-          <h2 class="mb-1 font-semibold">Payment (Cash on Delivery)</h2>
-          <p class="mb-4 text-sm">Status: ${paymentPill(o.payment_status)}${o.paid_at ? `<br><span class="text-xs text-charcoal/55">Paid ${formatDate(o.paid_at)}</span>` : ""}</p>
+          <h2 class="mb-1 font-semibold">Payment (${PAYMENT_METHOD_LABEL[o.payment_method] || esc(o.payment_method)})</h2>
+          <p class="mb-4 text-sm">Status: ${paymentPill(o.payment_status, o.payment_method, o.upi_ref)}${o.paid_at ? `<br><span class="text-xs text-charcoal/55">Paid ${formatDate(o.paid_at)}</span>` : ""}</p>
+          ${o.payment_method === "upi" ? (o.upi_ref
+            ? `<div class="mb-4 rounded bg-amber-50 p-3 text-sm"><p class="text-xs uppercase tracking-wider text-charcoal/60">Customer's UPI reference (UTR)</p>
+                <p class="mt-1 font-mono text-lg font-semibold tracking-wider">${esc(o.upi_ref)}</p>
+                <p class="text-xs text-charcoal/55">Submitted ${formatDate(o.upi_ref_at)}</p>
+                ${o.payment_status === "pending" ? `<p class="mt-2 text-xs text-charcoal/70">Open your bank / UPI app and check that <strong>${inr(o.total)}</strong> was received with this UTR before marking as paid.</p>` : ""}</div>`
+            : `<p class="mb-4 rounded bg-ivory p-3 text-sm text-charcoal/70">Waiting for the customer to pay by UPI and submit their UTR. You can also mark it paid if you see the payment in your bank app.</p>`) : ""}
           ${o.payment_status === "pending" && o.status !== "cancelled" ? `
             <form id="payForm" class="space-y-3">
-              <div><label class="ad-label" for="payNote">Note (optional)</label><input class="ad-input" id="payNote" maxlength="500" placeholder="e.g. Collected by courier"></div>
+              <div><label class="ad-label" for="payNote">Note (optional)</label><input class="ad-input" id="payNote" maxlength="500" placeholder="${o.payment_method === "upi" ? "e.g. Verified in bank app" : "e.g. Collected by courier"}"></div>
               <button class="ad-btn ad-btn--primary w-full bg-green-700 hover:bg-green-800">Mark ${inr(o.total)} as Paid</button>
             </form>` : ""}
           ${o.payment_status === "paid" ? `<button id="unpayBtn" class="ad-btn ad-btn--ghost w-full">Revert to Pending</button>` : ""}
@@ -286,5 +295,6 @@ export async function renderOrderDetail(view, id) {
 }
 
 function labelFor(type, v) {
+  if (v === "upi_ref_submitted") return "UPI reference submitted";
   return (type === "payment" ? PAYMENT_LABEL : STATUS_LABEL)[v] || v;
 }

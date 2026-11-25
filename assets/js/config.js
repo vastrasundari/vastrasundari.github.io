@@ -17,4 +17,9 @@ window.VS_CONFIG = {
   CONTACT_PHONE: "",       // e.g. "+91 98765 43210"
   WHATSAPP_NUMBER: "",     // digits with country code, e.g. "919876543210"
   STUDIO_ADDRESS: "",
+
+  // UPI payments at checkout (leave UPI_ID "" to offer Cash on Delivery only).
+  // Customers pay to this UPI ID, enter their UTR, and an admin marks the order as paid.
+  UPI_ID: "khandarvipul@okhdfcbank",
+  UPI_PAYEE_NAME: "Vastra Sundari",
 };

@@ -39,6 +39,10 @@
   .vs-qty button { @apply grid h-10 w-10 place-items-center text-lg text-charcoal/70 hover:text-burgundy disabled:opacity-30; }
   .vs-qty span { @apply w-8 text-center text-sm; }
 
+  .vs-payopt { @apply flex cursor-pointer items-start gap-3 border border-gold/40 bg-white p-5 transition hover:border-burgundy/60; }
+  .vs-payopt input { @apply mt-1 h-4 w-4 shrink-0 accent-burgundy; }
+  .vs-payopt:has(input:checked) { @apply border-burgundy ring-1 ring-burgundy; }
+  .vs-qr svg { @apply block h-auto w-full; }
   .vs-alert { @apply border-l-2 border-maroon bg-maroon/5 px-4 py-3 text-sm text-maroon; }
   .vs-note { @apply border-l-2 border-gold bg-gold/10 px-4 py-3 text-sm text-charcoal; }
   .vs-spinner { @apply inline-block h-5 w-5 animate-spin rounded-full border-2 border-current border-r-transparent; }

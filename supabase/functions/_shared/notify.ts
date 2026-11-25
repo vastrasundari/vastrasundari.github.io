@@ -2,7 +2,7 @@
 // All credentials come from Edge Function secrets — never from the browser.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.45.4";
 
-export type OrderEvent = "order_placed" | "confirmed" | "shipped" | "delivered" | "cancelled";
+export type OrderEvent = "order_placed" | "confirmed" | "shipped" | "delivered" | "cancelled" | "upi_submitted";
 
 const env = (k: string) => (Deno.env.get(k) ?? "").trim();
 const list = (k: string) => env(k).split(",").map((s) => s.trim()).filter(Boolean);
@@ -21,16 +21,23 @@ interface OrderRow {
   customer_name: string; customer_email: string; customer_phone: string;
   address_line1: string; address_line2: string | null; city: string; state: string; pincode: string;
   notes: string | null; subtotal: number; shipping_fee: number; total: number;
-  status: string; payment_status: string; courier_name: string | null; tracking_number: string | null;
+  status: string; payment_status: string; payment_method: string; upi_ref: string | null; courier_name: string | null; tracking_number: string | null;
   cancel_reason: string | null; created_at: string;
   order_items: { product_name: string; size_label: string; quantity: number; unit_price: number; line_total: number }[];
 }
 
-const CUSTOMER_COPY: Record<OrderEvent, { subject: (o: OrderRow) => string; heading: string; body: (o: OrderRow) => string }> = {
+const isUpi = (o: OrderRow) => o.payment_method === "upi";
+const METHOD_LABEL = (o: OrderRow) => (isUpi(o) ? "UPI" : "Cash on Delivery");
+const totalLabel = (o: OrderRow) => (isUpi(o) ? "Total (UPI)" : "Total (COD)");
+
+// Events without an entry here (upi_submitted) notify the store team only.
+const CUSTOMER_COPY: Partial<Record<OrderEvent, { subject: (o: OrderRow) => string; heading: string; body: (o: OrderRow) => string }>> = {
   order_placed: {
     subject: (o) => `We've received your order ${o.order_number}`,
     heading: "Thank you for your order",
-    body: () => `We have received your order and our team will confirm it shortly. Payment is <strong>Cash on Delivery</strong> — please keep the amount ready when your parcel arrives.`,
+    body: (o) => isUpi(o)
+      ? `We have received your order. Please complete your payment of <strong>${inr(o.total)}</strong> by <strong>UPI</strong>: open your order page with the button below to scan the QR code or pay with any UPI app, then enter the 12-digit UPI reference number (UTR). We will confirm your order as soon as the payment reaches us.`
+      : `We have received your order and our team will confirm it shortly. Payment is <strong>Cash on Delivery</strong> — please keep the amount ready when your parcel arrives.`,
   },
   confirmed: {
     subject: (o) => `Your order ${o.order_number} is confirmed`,
@@ -45,7 +52,7 @@ const CUSTOMER_COPY: Record<OrderEvent, { subject: (o: OrderRow) => string; head
       (o.courier_name || o.tracking_number
         ? `<br><br><strong>Courier:</strong> ${esc(o.courier_name ?? "—")}<br><strong>Tracking number:</strong> ${esc(o.tracking_number ?? "—")}`
         : "") +
-      `<br><br>Please keep <strong>${inr(o.total)}</strong> ready for Cash on Delivery.`,
+      (!isUpi(o) && o.payment_status !== "paid" ? `<br><br>Please keep <strong>${inr(o.total)}</strong> ready for Cash on Delivery.` : ""),
   },
   delivered: {
     subject: (o) => `Your order ${o.order_number} has been delivered`,
@@ -58,7 +65,9 @@ const CUSTOMER_COPY: Record<OrderEvent, { subject: (o: OrderRow) => string; head
     body: (o) =>
       `Your order has been cancelled.` +
       (o.cancel_reason ? `<br><br><strong>Reason:</strong> ${esc(o.cancel_reason)}` : "") +
-      `<br><br>No payment is due. If you have any questions, simply reply to this email.`,
+      (isUpi(o) && (o.payment_status === "paid" || o.upi_ref)
+        ? `<br><br>If you have already paid by UPI, the amount of <strong>${inr(o.total)}</strong> will be refunded to your account. If you have any questions, simply reply to this email.`
+        : `<br><br>No payment is due. If you have any questions, simply reply to this email.`),
   },
 };
 
@@ -68,6 +77,7 @@ const EVENT_LABEL: Record<OrderEvent, string> = {
   shipped: "Order shipped",
   delivered: "Order delivered",
   cancelled: "Order cancelled",
+  upi_submitted: "UPI payment submitted",
 };
 
 function itemsTable(o: OrderRow): string {
@@ -83,7 +93,7 @@ function itemsTable(o: OrderRow): string {
     ${rows}
     <tr><td style="padding:8px 0 0;font-size:13px;color:#7a6f6f">Subtotal</td><td style="padding:8px 0 0;text-align:right;font-size:13px;color:#7a6f6f">${inr(o.subtotal)}</td></tr>
     <tr><td style="padding:4px 0;font-size:13px;color:#7a6f6f">Shipping</td><td style="padding:4px 0;text-align:right;font-size:13px;color:#7a6f6f">${Number(o.shipping_fee) === 0 ? "Complimentary" : inr(o.shipping_fee)}</td></tr>
-    <tr><td style="padding:8px 0;font-size:16px;color:#641B32;font-weight:bold">Total (COD)</td><td style="padding:8px 0;text-align:right;font-size:16px;color:#641B32;font-weight:bold">${inr(o.total)}</td></tr>
+    <tr><td style="padding:8px 0;font-size:16px;color:#641B32;font-weight:bold">${totalLabel(o)}</td><td style="padding:8px 0;text-align:right;font-size:16px;color:#641B32;font-weight:bold">${inr(o.total)}</td></tr>
   </table>`;
 }
 
@@ -115,6 +125,7 @@ function layout(heading: string, inner: string): string {
 
 function customerEmail(o: OrderRow, event: OrderEvent) {
   const copy = CUSTOMER_COPY[event];
+  if (!copy) return null;
   const link = SITE_URL() ? `${SITE_URL()}/order.html?no=${encodeURIComponent(o.order_number)}&t=${o.access_token}` : "";
   const inner = `
     <p style="margin:0 0 8px;font-size:14px">Dear ${esc(o.customer_name)},</p>
@@ -127,7 +138,7 @@ function customerEmail(o: OrderRow, event: OrderEvent) {
   return {
     subject: copy.subject(o),
     html: layout(copy.heading, inner),
-    text: `${copy.heading}\n\nOrder ${o.order_number}\nTotal (COD): ${inr(o.total)}\n${link}`,
+    text: `${copy.heading}\n\nOrder ${o.order_number}\n${totalLabel(o)}: ${inr(o.total)}\n${link}`,
   };
 }
 
@@ -136,7 +147,8 @@ function adminEmail(o: OrderRow, event: OrderEvent) {
   const inner = `
     <p style="margin:0;font-size:14px"><strong>${esc(EVENT_LABEL[event])}</strong> — ${esc(o.order_number)}</p>
     <p style="margin:8px 0 0;font-size:14px">Customer: ${esc(o.customer_name)} · ${esc(o.customer_phone)} · ${esc(o.customer_email)}</p>
-    <p style="margin:4px 0 0;font-size:14px">Status: ${esc(o.status)} · Payment: ${esc(o.payment_status)} (COD)</p>
+    <p style="margin:4px 0 0;font-size:14px">Status: ${esc(o.status)} · Payment: ${esc(o.payment_status)} (${METHOD_LABEL(o)})</p>
+    ${o.upi_ref ? `<p style="margin:4px 0 0;font-size:14px"><strong>UPI reference (UTR): ${esc(o.upi_ref)}</strong> — check your bank account for ${inr(o.total)} before marking the order as paid.</p>` : ""}
     ${o.cancel_reason && event === "cancelled" ? `<p style="margin:4px 0 0;font-size:14px">Reason: ${esc(o.cancel_reason)}</p>` : ""}
     ${o.notes ? `<p style="margin:4px 0 0;font-size:14px">Customer note: ${esc(o.notes)}</p>` : ""}
     ${itemsTable(o)}
@@ -212,7 +224,7 @@ export async function notifyOrderEvent(db: SupabaseClient, orderId: string, even
   const jobs: { channel: "email" | "whatsapp"; recipient: string; run: () => Promise<string> }[] = [];
 
   const c = customerEmail(order, event);
-  jobs.push({ channel: "email", recipient: order.customer_email, run: () => sendEmail(order.customer_email, c) });
+  if (c) jobs.push({ channel: "email", recipient: order.customer_email, run: () => sendEmail(order.customer_email, c) });
 
   const a = adminEmail(order, event);
   for (const to of list("ADMIN_EMAILS")) jobs.push({ channel: "email", recipient: to, run: () => sendEmail(to, a) });

@@ -18,8 +18,10 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create type public.payment_method as enum ('cod');
+  create type public.payment_method as enum ('cod', 'upi');
 exception when duplicate_object then null; end $$;
+-- databases created before UPI support only have 'cod'
+alter type public.payment_method add value if not exists 'upi';
 
 -- ---------------------------------------------------------------------
 -- 1. Tables
@@ -113,6 +115,8 @@ create table if not exists public.orders (
   payment_method    public.payment_method not null default 'cod',
   payment_status    public.payment_status not null default 'pending',
   status            public.order_status   not null default 'order_received',
+  upi_ref           text check (upi_ref ~ '^[0-9]{12}$'),         -- 12-digit UPI reference (UTR) entered by the buyer
+  upi_ref_at        timestamptz,
 
   courier_name      text check (char_length(courier_name) <= 80),
   tracking_number   text check (char_length(tracking_number) <= 80),
@@ -128,6 +132,10 @@ create table if not exists public.orders (
 
   constraint orders_total_matches check (total = subtotal + shipping_fee)
 );
+-- columns added after the first release (no-ops on fresh installs)
+alter table public.orders add column if not exists upi_ref    text check (upi_ref ~ '^[0-9]{12}$');
+alter table public.orders add column if not exists upi_ref_at timestamptz;
+
 create index if not exists orders_created_idx        on public.orders (created_at desc);
 create index if not exists orders_status_created_idx on public.orders (status, created_at desc);
 create index if not exists orders_customer_idx       on public.orders (customer_id);
@@ -206,11 +214,13 @@ grant execute on function public.is_admin() to anon, authenticated;
 --    Prices come from the database, stock is locked and decremented
 --    atomically, and everything succeeds or fails together.
 -- ---------------------------------------------------------------------
+drop function if exists public.create_order(jsonb, jsonb, jsonb, text);   -- pre-UPI signature
 create or replace function public.create_order(
   p_customer jsonb,   -- {full_name, email, phone}
   p_address  jsonb,   -- {line1, line2, city, state, pincode}
   p_items    jsonb,   -- [{size_id, quantity}, ...]
-  p_notes    text
+  p_notes    text,
+  p_payment_method text default 'cod'   -- 'cod' | 'upi'
 ) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -226,6 +236,9 @@ declare
   v_phone          text := trim(p_customer->>'phone');
   v_recent         int;
 begin
+  if p_payment_method is null or p_payment_method not in ('cod', 'upi') then
+    raise exception 'INVALID_PAYMENT_METHOD' using errcode = 'P0001';
+  end if;
   if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then
     raise exception 'CART_EMPTY' using errcode = 'P0001';
   end if;
@@ -253,13 +266,13 @@ begin
   insert into public.orders (
     order_number, customer_id, customer_name, customer_email, customer_phone,
     address_line1, address_line2, city, state, pincode, notes,
-    subtotal, shipping_fee, total
+    subtotal, shipping_fee, total, payment_method
   ) values (
     v_order_number, v_customer_id, trim(p_customer->>'full_name'), v_email, v_phone,
     trim(p_address->>'line1'), nullif(trim(coalesce(p_address->>'line2', '')), ''),
     trim(p_address->>'city'), trim(p_address->>'state'), trim(p_address->>'pincode'),
     nullif(trim(coalesce(p_notes, '')), ''),
-    0, v_shipping_fee, v_shipping_fee
+    0, v_shipping_fee, v_shipping_fee, p_payment_method::public.payment_method
   ) returning id, access_token into v_order_id, v_access_token;
 
   -- merge duplicate sizes, then lock each size row in a stable order (avoids deadlocks)
@@ -304,8 +317,10 @@ begin
    where id = v_order_id;
 
   insert into public.order_status_history (order_id, change_type, from_value, to_value, note)
-  values (v_order_id, 'status', null, 'order_received', 'Order placed by customer (Cash on Delivery)'),
-         (v_order_id, 'payment', null, 'pending', 'COD — payment to be collected on delivery');
+  values (v_order_id, 'status', null, 'order_received',
+          case p_payment_method when 'upi' then 'Order placed by customer (UPI)' else 'Order placed by customer (Cash on Delivery)' end),
+         (v_order_id, 'payment', null, 'pending',
+          case p_payment_method when 'upi' then 'UPI — awaiting payment from customer' else 'COD — payment to be collected on delivery' end);
 
   return jsonb_build_object(
     'order_id', v_order_id,
@@ -313,8 +328,46 @@ begin
     'access_token', v_access_token
   );
 end $$;
-revoke all on function public.create_order(jsonb, jsonb, jsonb, text) from public, anon, authenticated;
-grant execute on function public.create_order(jsonb, jsonb, jsonb, text) to service_role;
+revoke all on function public.create_order(jsonb, jsonb, jsonb, text, text) from public, anon, authenticated;
+grant execute on function public.create_order(jsonb, jsonb, jsonb, text, text) to service_role;
+
+-- ---------------------------------------------------------------------
+-- 3b. submit_upi_ref — the buyer records the 12-digit UPI reference (UTR)
+--     after paying. Called only by the submit-upi-ref Edge Function, which
+--     passes the order's secret access token. An admin still checks the
+--     bank account and marks the order as paid.
+-- ---------------------------------------------------------------------
+create or replace function public.submit_upi_ref(
+  p_order_number text,
+  p_token        uuid,
+  p_ref          text
+) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_order public.orders%rowtype;
+begin
+  select * into v_order from public.orders
+   where order_number = p_order_number and access_token = p_token
+     for update;
+  if not found then raise exception 'ORDER_NOT_FOUND' using errcode = 'P0001'; end if;
+  if v_order.payment_method <> 'upi' then raise exception 'NOT_UPI_ORDER' using errcode = 'P0001'; end if;
+  if v_order.status = 'cancelled' then raise exception 'ORDER_CANCELLED' using errcode = 'P0001'; end if;
+  if v_order.payment_status = 'paid' then raise exception 'ALREADY_PAID' using errcode = 'P0001'; end if;
+  if p_ref is null or p_ref !~ '^[0-9]{12}$' then raise exception 'INVALID_UPI_REF' using errcode = 'P0001'; end if;
+  if v_order.upi_ref = p_ref then
+    return jsonb_build_object('order_id', v_order.id, 'changed', false);
+  end if;
+
+  update public.orders set upi_ref = p_ref, upi_ref_at = now() where id = v_order.id;
+
+  insert into public.order_status_history (order_id, change_type, from_value, to_value, note)
+  values (v_order.id, 'payment', v_order.payment_status::text, 'upi_ref_submitted',
+          'Customer submitted UPI reference ' || p_ref || ' — check your bank account before marking as paid');
+
+  return jsonb_build_object('order_id', v_order.id, 'changed', true);
+end $$;
+revoke all on function public.submit_upi_ref(text, uuid, text) from public, anon, authenticated;
+grant execute on function public.submit_upi_ref(text, uuid, text) to service_role;
 
 -- ---------------------------------------------------------------------
 -- 4. Admin order updates — called only by the admin-update-order

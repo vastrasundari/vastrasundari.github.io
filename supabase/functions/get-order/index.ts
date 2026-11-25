@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
   const db = serviceClient();
   const { data, error } = await db
     .from("orders")
-    .select(`order_number, created_at, status, payment_status, payment_method,
+    .select(`order_number, created_at, status, payment_status, payment_method, upi_ref, upi_ref_at,
              customer_name, address_line1, address_line2, city, state, pincode,
              subtotal, shipping_fee, total, courier_name, tracking_number, cancel_reason,
              order_items(product_name, size_label, image_url, unit_price, quantity, line_total)`)

@@ -6,7 +6,7 @@ export async function renderDashboard(view) {
   const [statsRes, recentRes] = await Promise.all([
     sb.rpc("admin_dashboard_stats"),
     sb.from("orders")
-      .select("id, order_number, customer_name, customer_phone, total, status, payment_status, created_at")
+      .select("id, order_number, customer_name, customer_phone, total, status, payment_status, payment_method, upi_ref, created_at")
       .order("created_at", { ascending: false })
       .limit(10),
   ]);
@@ -29,8 +29,8 @@ export async function renderDashboard(view) {
 
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
       ${card("Total Sales", inr(s.total_sales), "#/orders", "text-burgundy")}
-      ${card("COD Collected", inr(s.collected), "#/orders?payment=paid", "text-green-700")}
-      ${card("COD Outstanding", inr(s.cod_outstanding), "#/orders?payment=pending", "text-amber-700")}
+      ${card("Payments Received", inr(s.collected), "#/orders?payment=paid", "text-green-700")}
+      ${card("Payments Pending", inr(s.cod_outstanding), "#/orders?payment=pending", "text-amber-700")}
     </div>
 
     <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
@@ -58,7 +58,7 @@ export async function renderDashboard(view) {
             <td class="ad-td">${esc(o.customer_name)}<br><span class="text-xs text-charcoal/50">${esc(o.customer_phone)}</span></td>
             <td class="ad-td text-charcoal/70">${formatDate(o.created_at)}</td>
             <td class="ad-td">${statusPill(o.status)}</td>
-            <td class="ad-td">${paymentPill(o.payment_status)}</td>
+            <td class="ad-td">${paymentPill(o.payment_status, o.payment_method, o.upi_ref)}</td>
             <td class="ad-td text-right font-medium">${inr(o.total)}</td></tr>`).join("")}
         </tbody></table></div>`
       : `<p class="p-8 text-center text-sm text-charcoal/55">No orders yet.</p>`}

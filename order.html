@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="assets/css/tailwind.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/vendor/qrcode.js" defer></script>
 </head>
 <body>
   <script src="assets/js/layout.js" data-part="header"></script>
@@ -25,7 +26,7 @@
   <script src="assets/js/main.js" defer></script>
   <script type="module">
     import { callFunction } from "./assets/js/lib/supabase.js";
-    import { esc, inr, qs, formatDate, STATUS_LABEL, PAYMENT_LABEL, imageFallback } from "./assets/js/lib/util.js";
+    import { esc, inr, qs, formatDate, STATUS_LABEL, PAYMENT_LABEL, PAYMENT_METHOD_LABEL, PAYMENT_METHOD_SHORT, imageFallback, upiId, upiPayLink } from "./assets/js/lib/util.js";
     import { getSavedOrders, saveOrder } from "./assets/js/lib/cart.js";
 
     const root = document.getElementById("orderRoot");
@@ -38,7 +39,7 @@
       try {
         const { order } = await callFunction("get-order", { order_number: no, token });
         saveOrder(order.order_number, token); // remember on this device (e.g. opened from email)
-        renderOrder(order);
+        renderOrder(order, token);
       } catch (e) {
         root.innerHTML = `<div class="vs-empty"><p class="font-display text-3xl text-burgundy">We couldn't find that order</p>
           <p class="mt-2 text-sm text-charcoal/60">${esc(e.status === 404 ? "Please use the link from your order email." : e.message)}</p>
@@ -65,7 +66,96 @@
           </div>` : `<div class="mt-10 text-center"><a href="shop.html" class="vs-btn vs-btn--primary">Explore Collection</a></div>`}`;
     }
 
-    function renderOrder(o) {
+    function upiSection(o, token) {
+      if (o.payment_method !== "upi" || o.payment_status !== "pending" || o.status === "cancelled") return "";
+      const id = upiId();
+      if (!id) {
+        return `<section class="mt-8 bg-white p-6 ring-1 ring-gold/30 md:p-8"><h2 class="font-display text-xl text-burgundy">Complete your UPI payment</h2>
+          <p class="mt-2 text-sm text-charcoal/70">Please contact us to complete the payment of <strong>${inr(o.total)}</strong> for order ${esc(o.order_number)}.</p></section>`;
+      }
+      const link = upiPayLink(o.total, o.order_number);
+      return `
+        <section class="mt-8 bg-white p-6 ring-1 ring-gold/30 md:p-8" id="upiBox" aria-labelledby="upiTitle">
+          <h2 class="font-display text-2xl text-burgundy" id="upiTitle">${o.upi_ref ? "Payment reference received" : "Complete your UPI payment"}</h2>
+          ${o.upi_ref ? `<p class="mt-2 text-sm text-charcoal/70">Thank you! We received UPI reference <strong class="text-burgundy">${esc(o.upi_ref)}</strong> and are verifying your payment. Your order will be confirmed once it reaches us. If you entered the wrong number, update it below.</p>` :
+            `<p class="mt-2 text-sm text-charcoal/70">Your order is reserved. Pay the exact amount below with any UPI app, then enter the 12-digit UPI reference number (UTR).</p>`}
+          <div class="mt-6 grid gap-8 md:grid-cols-[220px_1fr] md:items-start">
+            <div class="mx-auto w-[220px] text-center">
+              <div class="vs-qr bg-white p-2 ring-1 ring-charcoal/10" id="upiQr" role="img" aria-label="UPI QR code to pay ${esc(inr(o.total))}"></div>
+              <p class="mt-2 text-xs text-charcoal/55">Scan with Google Pay, PhonePe, Paytm or BHIM</p>
+            </div>
+            <div>
+              <dl class="space-y-3 text-sm">
+                <div><dt class="text-xs uppercase tracking-[.18em] text-charcoal/55">Amount</dt><dd class="font-display text-3xl text-burgundy">${inr(o.total)}</dd></div>
+                <div><dt class="text-xs uppercase tracking-[.18em] text-charcoal/55">UPI ID</dt>
+                  <dd class="flex flex-wrap items-center gap-3"><span class="break-all font-medium">${esc(id)}</span>
+                  <button type="button" class="text-xs uppercase tracking-[.14em] text-burgundy underline underline-offset-4" id="copyUpi">Copy</button></dd></div>
+                <div><dt class="text-xs uppercase tracking-[.18em] text-charcoal/55">Remark / note</dt><dd class="font-medium">${esc(o.order_number)}</dd></div>
+              </dl>
+              <a href="${esc(link)}" class="vs-btn vs-btn--primary mt-6 w-full md:hidden">Pay ${inr(o.total)} with UPI app</a>
+              <ol class="mt-6 list-decimal space-y-1 pl-5 text-sm text-charcoal/70">
+                <li>On your phone, tap <em>Pay with UPI app</em> — or scan the QR code / pay to the UPI ID above.</li>
+                <li>Pay exactly <strong>${inr(o.total)}</strong> and add <strong>${esc(o.order_number)}</strong> as the note if asked.</li>
+                <li>Copy the 12-digit <strong>UPI reference / UTR</strong> from your UPI app's payment details and submit it below.</li>
+              </ol>
+              <form id="utrForm" class="mt-6" novalidate>
+                <label class="vs-label" for="upi_ref">UPI reference number (UTR) *</label>
+                <div class="flex flex-col gap-3 sm:flex-row">
+                  <input class="vs-input" id="upi_ref" name="upi_ref" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="12-digit number" value="${esc(o.upi_ref || "")}" required>
+                  <button class="vs-btn vs-btn--primary sm:w-auto" id="utrBtn">${o.upi_ref ? "Update" : "Submit"}</button>
+                </div>
+                <p class="vs-error hidden" id="utrErr" role="alert"></p>
+              </form>
+            </div>
+          </div>
+        </section>`;
+    }
+
+    function wireUpi(o, token) {
+      const box = document.getElementById("upiBox");
+      if (!box) return;
+      const link = upiPayLink(o.total, o.order_number);
+      const drawQr = () => {
+        if (!window.qrcode) return false;
+        const qr = window.qrcode(0, "M");
+        qr.addData(link);
+        qr.make();
+        document.getElementById("upiQr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+        return true;
+      };
+      if (!drawQr()) window.addEventListener("load", drawQr, { once: true });
+
+      document.getElementById("copyUpi").addEventListener("click", async (e) => {
+        try { await navigator.clipboard.writeText(upiId()); e.target.textContent = "Copied"; }
+        catch { e.target.textContent = "Copy failed"; }
+        setTimeout(() => (e.target.textContent = "Copy"), 2000);
+      });
+
+      const form = document.getElementById("utrForm");
+      const err = document.getElementById("utrErr");
+      const input = document.getElementById("upi_ref");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const ref = input.value.replace(/\s/g, "");
+        const fail = (m) => { err.textContent = m; err.classList.remove("hidden"); input.setAttribute("aria-invalid", "true"); input.focus(); };
+        err.classList.add("hidden"); input.removeAttribute("aria-invalid");
+        if (!/^\d{12}$/.test(ref)) return fail("Please enter the 12-digit UPI reference number (UTR) from your UPI app.");
+        const btn = document.getElementById("utrBtn");
+        btn.disabled = true;
+        btn.innerHTML = `<span class="vs-spinner"></span>`;
+        try {
+          await callFunction("submit-upi-ref", { order_number: o.order_number, token, upi_ref: ref });
+          renderOrder({ ...o, upi_ref: ref }, token);
+          document.getElementById("upiBox")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        } catch (ex) {
+          btn.disabled = false;
+          btn.textContent = o.upi_ref ? "Update" : "Submit";
+          fail(ex.message);
+        }
+      });
+    }
+
+    function renderOrder(o, token) {
       const steps = ["order_received", "confirmed", "shipped", "delivered"];
       const cancelled = o.status === "cancelled";
       const reached = steps.indexOf(o.status);
@@ -77,7 +167,7 @@
           <p class="vs-kicker">${isNew ? "Thank you" : "Order details"}</p>
           <h1 class="vs-page-title mt-3">${isNew ? "Your order is placed" : esc(o.order_number)}</h1>
           <p class="mt-3 text-sm text-charcoal/65">
-            ${isNew ? `Order <strong class="text-burgundy">${esc(o.order_number)}</strong> · a confirmation email is on its way.` : `Placed on ${formatDate(o.created_at)}`}
+            ${isNew ? `Order <strong class="text-burgundy">${esc(o.order_number)}</strong> · ${o.payment_method === "upi" && o.payment_status === "pending" && !o.upi_ref ? "please complete your UPI payment below." : "a confirmation email is on its way."}` : `Placed on ${formatDate(o.created_at)}`}
           </p>
         </div>
 
@@ -90,8 +180,9 @@
                   <p class="mt-3 text-[10.5px] uppercase tracking-[.14em] md:text-xs ${i <= reached ? "text-burgundy font-medium" : "text-charcoal/45"}">${STATUS_LABEL[s]}</p></li>`).join("")}
               </ol>
               ${o.status === "shipped" && (o.courier_name || o.tracking_number) ? `<p class="mt-6 text-sm"><span class="text-charcoal/60">Courier:</span> ${esc(o.courier_name || "—")} &nbsp;·&nbsp; <span class="text-charcoal/60">Tracking:</span> ${esc(o.tracking_number || "—")}</p>` : ""}`}
-          <p class="mt-6 text-sm"><span class="text-charcoal/60">Payment:</span> Cash on Delivery — ${PAYMENT_LABEL[o.payment_status]}</p>
+          <p class="mt-6 text-sm"><span class="text-charcoal/60">Payment:</span> ${PAYMENT_METHOD_LABEL[o.payment_method] || "Cash on Delivery"} — ${o.payment_method === "upi" && o.payment_status === "pending" && o.upi_ref ? "Verifying" : PAYMENT_LABEL[o.payment_status]}</p>
         </section>
+        ${upiSection(o, token)}
 
         <div class="mt-8 grid gap-8 md:grid-cols-[1fr_280px]">
           <section class="bg-white p-6 ring-1 ring-gold/30 md:p-8">
@@ -106,7 +197,7 @@
             <dl class="mt-2 space-y-2 border-t border-charcoal/10 pt-4 text-sm">
               <div class="flex justify-between"><dt class="text-charcoal/65">Subtotal</dt><dd>${inr(o.subtotal)}</dd></div>
               <div class="flex justify-between"><dt class="text-charcoal/65">Shipping</dt><dd>${Number(o.shipping_fee) ? inr(o.shipping_fee) : "Complimentary"}</dd></div>
-              <div class="flex justify-between pt-2 text-base font-medium"><dt>Total (COD)</dt><dd class="text-burgundy">${inr(o.total)}</dd></div>
+              <div class="flex justify-between pt-2 text-base font-medium"><dt>Total (${PAYMENT_METHOD_SHORT[o.payment_method] || "COD"})</dt><dd class="text-burgundy">${inr(o.total)}</dd></div>
             </dl>
           </section>
           <section class="h-fit bg-white p-6 ring-1 ring-gold/30">
@@ -118,6 +209,7 @@
           </section>
         </div>
         <div class="mt-10 text-center"><a href="shop.html" class="vs-btn vs-btn--outline">Continue Shopping</a></div>`;
+      wireUpi(o, token);
     }
   </script>
 </body>

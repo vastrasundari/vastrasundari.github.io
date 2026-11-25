@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
     p_address: v.data.address,
     p_items: v.data.items,
     p_notes: v.data.notes,
+    p_payment_method: v.data.payment_method,
   });
 
   if (error) {

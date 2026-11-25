@@ -23,6 +23,22 @@ export const STATUS_LABEL = {
   cancelled: "Cancelled",
 };
 export const PAYMENT_LABEL = { pending: "Pending", paid: "Paid" };
+export const PAYMENT_METHOD_LABEL = { cod: "Cash on Delivery", upi: "UPI" };
+export const PAYMENT_METHOD_SHORT = { cod: "COD", upi: "UPI" };
+
+/** The store's UPI ID from config.js, or "" when UPI payments are switched off. */
+export const upiId = () => {
+  const id = String(window.VS_CONFIG?.UPI_ID || "").trim();
+  return /^[\w.\-]{2,256}@[a-zA-Z][\w]{2,64}$/.test(id) ? id : "";
+};
+
+/** upi://pay deep link (NPCI UPI linking spec) for an order amount. */
+export function upiPayLink(amount, orderNumber) {
+  const id = upiId();
+  if (!id) return "";
+  const name = String(window.VS_CONFIG?.UPI_PAYEE_NAME || "Vastra Sundari");
+  return `upi://pay?pa=${id}&pn=${encodeURIComponent(name)}&am=${Number(amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent(orderNumber)}`;
+}
 
 export const formatDate = (iso, withTime = true) =>
   new Date(iso).toLocaleString("en-IN", {
