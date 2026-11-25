@@ -1,30 +1,13 @@
-// Home page "clothesline" showcase: every product hangs on one rod, the
-// selected one is large in front, the rest hang smaller on both sides.
-// Selecting another product swings it forward (3D) and swaps the details panel.
-import { sb, isConfigured } from "./lib/supabase.js";
+// Home page boutique showcase: outfits hang on a gold rail, the selected one
+// is large and sharp in front, the rest wait smaller and softly blurred on both
+// sides. Choosing another moves that actual garment element to the centre with
+// a 3D flip and swaps the details card. Data comes from lib/catalog.js.
 import { esc, inr, COLLECTIONS, imageFallback } from "./lib/util.js";
 import { addToCart, inWishlist, toggleWishlist } from "./lib/cart.js";
+import { fetchShowcaseProducts } from "./lib/catalog.js";
 
 const root = document.getElementById("showcase");
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-const SELECT = `id, slug, name, description, collection, fabric, craft, price, compare_at_price, is_featured, created_at,
-  product_images(image_url, alt_text, sort_order), product_sizes(id, size_label, stock, sort_order)`;
-
-async function load() {
-  if (!isConfigured) return [];
-  const { data, error } = await sb.from("products").select(SELECT)
-    .eq("is_active", true)
-    .order("is_featured", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(14);
-  if (error) throw error;
-  return data.map((p) => ({
-    ...p,
-    images: [...(p.product_images || [])].sort((a, b) => a.sort_order - b.sort_order),
-    sizes: [...(p.product_sizes || [])].sort((a, b) => a.sort_order - b.sort_order),
-  }));
-}
 
 const garment = (p, cls = "") => p.images[0]
   ? `<img class="${cls}" src="${esc(p.images[0].image_url)}" alt="" loading="lazy" decoding="async" draggable="false">`
@@ -46,7 +29,7 @@ function render(products) {
 
   const line = root.querySelector(".showcase__line");
   line.innerHTML = products.map((p, i) => `
-    <li class="hang" data-i="${i}">
+    <li class="hang" data-i="${i}" style="--i:${i}">
       <button type="button" class="hang__btn" aria-label="Show ${esc(p.name)}" aria-pressed="false">
         <span class="hang__swing">${hook}<span class="hang__garment">${garment(p)}</span></span>
       </button>
@@ -56,13 +39,24 @@ function render(products) {
   strip.innerHTML = products.map((p, i) => `
     <li><button type="button" class="strip__btn" data-i="${i}" aria-label="${esc(p.name)}" aria-pressed="false">${garment(p)}</button></li>`).join("");
 
+  const dotsEl = root.querySelector(".showcase__dots");
+  dotsEl.innerHTML = products.map((p, i) =>
+    `<button type="button" data-i="${i}" aria-label="Design ${i + 1} of ${products.length}: ${esc(p.name)}"></button>`).join("");
+  const dots = [...dotsEl.children];
+  dotsEl.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-i]");
+    if (b) select(+b.dataset.i);
+  });
+
   const items = [...line.children];
+  // one-shot sway ends -> hand the element back to its idle floating loop
+  line.addEventListener("animationend", (e) => e.target.classList.remove("is-swaying"));
   const thumbs = [...strip.querySelectorAll("button")];
   const panel = root.querySelector(".showcase__panel");
   const stage = root.querySelector(".showcase__stage");
   let sel = 0;
 
-  const AUTO_MS = 4500;
+  const AUTO_MS = 5000;
   const HOLD_AFTER_USER_MS = 9000;
   const autoEnabled = !reduceMotion && products.length > 1;
   let autoTimer = null, holdUntil = 0, userPaused = false, hovering = false, focused = false, onScreen = true;
@@ -140,15 +134,21 @@ function render(products) {
 
   // ---------- details panel ----------
   function fillPanel(p) {
-    const off = p.compare_at_price ? Math.round((1 - p.price / p.compare_at_price) * 100) : 0;
     const imgs = p.images.slice(0, 4);
     const sizes = p.sizes;
     panel.innerHTML = `
-      <p class="sc-panel__kicker">${esc(COLLECTIONS[p.collection]?.label || "")}</p>
+      <div class="sc-panel__top">
+        <p class="sc-panel__kicker">${esc(COLLECTIONS[p.collection]?.label || "")}</p>
+        ${p.badge ? `<span class="sc-panel__badge${p.badge === "Bestseller" ? " is-best" : ""}">${esc(p.badge)}</span>` : ""}
+      </div>
       <h2 class="sc-panel__name" id="scName">${esc(p.name)}</h2>
       <p class="sc-panel__price"><strong>${inr(p.price)}</strong>
-        ${p.compare_at_price ? `<s>${inr(p.compare_at_price)}</s><span class="sc-panel__off">${off}% OFF</span>` : ""}</p>
-      ${p.description ? `<p class="sc-panel__desc">${esc(p.description)}</p>` : (p.craft || p.fabric) ? `<p class="sc-panel__desc">${esc([p.craft, p.fabric].filter(Boolean).join(" · "))}</p>` : ""}
+        ${p.discount ? `<s>${inr(p.compare_at_price)}</s><span class="sc-panel__off">${p.discount}% OFF</span>` : ""}</p>
+      ${p.description ? `<p class="sc-panel__desc">${esc(p.description)}</p>` : ""}
+      ${p.fabric || p.craft ? `<dl class="sc-panel__facts">
+        ${p.fabric ? `<div><dt>Fabric</dt><dd>${esc(p.fabric)}</dd></div>` : ""}
+        ${p.craft ? `<div><dt>Work</dt><dd>${esc(p.craft)}</dd></div>` : ""}
+      </dl>` : ""}
       ${imgs.length ? `
         <a class="sc-panel__main" href="product.html?slug=${encodeURIComponent(p.slug)}" aria-label="View ${esc(p.name)} details">
           <img src="${esc(imgs[0].image_url)}" alt="${esc(imgs[0].alt_text || p.name)}" id="scMain">
@@ -220,6 +220,7 @@ function render(products) {
     sel = i;
     layout();
     thumbs.forEach((t, k) => t.setAttribute("aria-pressed", String(k === sel)));
+    dots.forEach((d, k) => (k === sel ? d.setAttribute("aria-current", "true") : d.removeAttribute("aria-current")));
     // centre the active thumbnail inside the strip only (never scroll the page)
     const t = thumbs[sel].parentElement;
     strip.scrollTo({ left: t.offsetLeft - (strip.clientWidth - t.offsetWidth) / 2, behavior: reduceMotion || initial ? "auto" : "smooth" });
@@ -304,7 +305,7 @@ function render(products) {
   requestAnimationFrame(() => root.classList.add("is-ready"));
 }
 
-load().then(render).catch((e) => {
+fetchShowcaseProducts().then(render).catch((e) => {
   console.error(e);
   render([]);
 });

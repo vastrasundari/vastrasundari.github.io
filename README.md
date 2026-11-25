@@ -83,7 +83,8 @@ assets/
   js/config.js        PUBLIC config: Supabase URL + anon key, contact details
   js/layout.js        Shared header / nav / search / footer
   js/main.js          Header behaviour, drawer, search, counters
-  js/lib/             supabase client, cart, helpers
+  js/showcase.js      Home page boutique slider (gold rail, 3D flip, autoplay, details card)
+  js/lib/             supabase client, catalog (product data), cart, helpers
 src/tailwind.css      Tailwind source (components)
 supabase/
   schema.sql          Tables, constraints, indexes, functions, RLS, storage bucket
@@ -277,7 +278,7 @@ The DuckDNS token is **not** needed for this setup and must never be committed. 
 
 To move to a purchased domain later, replace the `CNAME` file contents and update `SITE_URL`, `ALLOWED_ORIGINS` and the Supabase Auth URLs.
 
-**Home page showcase:** the top of the home page hangs up to 14 live products on a rod (featured products first, then newest). The first photo of each product is the hanging garment, so a **portrait photo of the outfit alone on a transparent (PNG/WebP) or plain light background** looks best; the details panel uses the other photos too.
+**Home page showcase:** the top of the home page hangs up to 14 live products on a gold rail (featured products first, then newest). Clicking a garment, the arrows, the dots, a thumbnail or a swipe moves that garment to the centre with a 3D flip; it also advances by itself every 5 seconds (paused on hover, after a manual choice, off screen, or with the Pause button; off for reduced-motion users). Products marked **Featured** show a *Bestseller* badge, others marked *New arrival* show *New Arrival*; *Fabric* and *Craft* appear as Fabric / Work. The first photo of each product is the hanging garment, so a **portrait photo of the outfit alone on a transparent (PNG/WebP) or plain light background** looks best; the details panel uses the other photos too.
 
 ---
 
