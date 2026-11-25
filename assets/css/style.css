@@ -539,11 +539,23 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; margin: 0; }
 }
 .showcase__bg {
   position: absolute; inset: 0; z-index: -1;
-  background:
-    radial-gradient(ellipse 60% 45% at 34% 30%, rgba(255, 244, 222, .85), transparent 70%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0) 62%, rgba(150, 95, 70, .16) 100%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='420' viewBox='0 0 220 420'%3E%3Cpath d='M20 420V170C20 90 70 46 110 30c40 16 90 60 90 140v250' fill='none' stroke='%23C5A04A' stroke-opacity='.28' stroke-width='1.5'/%3E%3Cpath d='M44 420V178c0-62 38-98 66-112 28 14 66 50 66 112v242' fill='none' stroke='%23C5A04A' stroke-opacity='.16'/%3E%3C/svg%3E") 0 -40px / 220px 420px repeat-x,
-    linear-gradient(180deg, #F4E6D2 0%, #EDD8C0 58%, #E2C6AA 100%);
+  --bg-veil:
+    radial-gradient(ellipse 34% 30% at 6% 82%, rgba(250, 244, 232, .78), rgba(250, 244, 232, 0) 70%),
+    linear-gradient(180deg, rgba(250, 240, 222, .18) 0%, rgba(250, 240, 222, 0) 35%, rgba(120, 70, 40, .10) 100%);
+  background: var(--bg-veil), url("../images/showcase-bg.jpg") center 62% / cover no-repeat, #EBD6BC;
+  background-image: var(--bg-veil), image-set(url("../images/showcase-bg.webp") type("image/webp"), url("../images/showcase-bg.jpg") type("image/jpeg"));
+}
+@media (max-width: 899px) {
+  /* the section is tall on phones: show the whole hall behind the rail, then fade into a plain tone */
+  .showcase__bg {
+    background-color: #F0E0C9;
+    background-image:
+      linear-gradient(180deg, rgba(240, 224, 201, 0) 380px, #F0E0C9 560px),
+      image-set(url("../images/showcase-bg-960.webp") type("image/webp"), url("../images/showcase-bg.jpg") type("image/jpeg"));
+    background-size: 100% 100%, auto 560px;
+    background-position: 0 0, 42% 0;
+    background-repeat: no-repeat;
+  }
 }
 .showcase__stage {
   position: absolute; inset: 0;
@@ -793,6 +805,10 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; margin: 0; }
 @media (max-width: 899px) {
   .showcase { height: auto; padding-bottom: 20px; display: flex; flex-direction: column; }
   .showcase__copy { position: relative; order: -1; left: auto; bottom: auto; padding: 22px var(--gutter) 0; text-align: center; }
+  .showcase__copy::before {
+    content: ""; position: absolute; z-index: -1; inset: 6px 12% -6px;
+    background: radial-gradient(ellipse at center, rgba(250, 244, 232, .82), rgba(250, 244, 232, 0) 72%);
+  }
   .showcase__flourish { margin-inline: auto; width: 160px; }
   .showcase__stage { position: relative; inset: auto; padding-top: 470px; --rail-h: 72px; perspective-origin: 50% 25%; }
   .showcase__panel {
