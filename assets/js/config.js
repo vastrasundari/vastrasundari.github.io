@@ -14,9 +14,9 @@ window.VS_CONFIG = {
 
   // Shown in the footer & contact section when filled in (leave "" to hide).
   CONTACT_EMAIL: "khandarvipul@gmail.com",
-  CONTACT_PHONE: "",       // e.g. "+91 98765 43210"
-  WHATSAPP_NUMBER: "",     // digits with country code, e.g. "919876543210"
-  STUDIO_ADDRESS: "",
+  CONTACT_PHONE: "+91 95106 68822",
+  WHATSAPP_NUMBER: "919510668822",
+  STUDIO_ADDRESS: "Jamnagar, Gujarat",
 
   // UPI payments at checkout (leave UPI_ID "" to offer Cash on Delivery only).
   // Customers pay to this UPI ID, enter their UTR, and an admin marks the order as paid.
