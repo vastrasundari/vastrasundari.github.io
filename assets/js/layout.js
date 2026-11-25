@@ -1,5 +1,5 @@
 /*
- * Shared storefront chrome (announcement, header, nav, drawer, search, footer).
+ * Shared storefront chrome (header, nav, drawer, search, footer).
  * Usage — place where the markup should appear:
  *   <script src="assets/js/layout.js" data-part="header"></script>
  *   <script src="assets/js/layout.js" data-part="footer"></script>
@@ -20,9 +20,9 @@
     ["Home", "index.html"],
     ["New Arrivals", "shop.html?new=1"],
     ["Chaniya Choli", "shop.html"],
-    ["Navratri Collection", "shop.html?collection=navratri"],
-    ["Bridal Collection", "shop.html?collection=bridal"],
-    ["Festive Collection", "shop.html?collection=festive"],
+    ["Navratri Collection", "shop.html?collection=navratri", "Navratri"],
+    ["Bridal Collection", "shop.html?collection=bridal", "Bridal"],
+    ["Festive Collection", "shop.html?collection=festive", "Festive"],
     ["About Us", "index.html#about"],
     ["Contact", "index.html#contact"],
   ];
@@ -39,11 +39,12 @@
            (u.searchParams.get("new") || "") === (p.get("new") || "");
   }
 
-  function navItems(cls) {
+  function navItems(cls, short) {
     return NAV.map(function (n) {
+      var label = short && n[2] ? n[2] : n[0];
       var active = isActive(n[1]);
       return '<li><a href="' + n[1] + '" class="' + cls + (active ? " is-active" : "") + '"' +
-        (active ? ' aria-current="page"' : "") + ">" + n[0] + "</a></li>";
+        (active ? ' aria-current="page"' : "") + ">" + label + "</a></li>";
     }).join("");
   }
 
@@ -58,28 +59,24 @@
     '<symbol id="i-motif" viewBox="0 0 40 40"><path d="M20 2 23 17 38 20 23 23 20 38 17 23 2 20 17 17Z"/><circle cx="20" cy="20" r="3"/></symbol>' +
     "</svg>";
 
+  var LOGO_SRC = "assets/images/logo.jpg";
+
   var HEADER =
     SPRITE +
-    '<div class="announcement" role="region" aria-label="Announcement"><div class="announcement__inner">' +
-    '<svg class="announcement__motif" aria-hidden="true"><use href="#i-motif"/></svg>' +
-    "<p>Celebrate Every Occasion in Traditional Elegance.</p>" +
-    '<svg class="announcement__motif" aria-hidden="true"><use href="#i-motif"/></svg></div></div>' +
-
     '<header class="header" id="header"><div class="header__top container">' +
     '<button class="header__burger" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileNav"><span></span><span></span><span></span></button>' +
-    '<div class="header__spacer" aria-hidden="true"></div>' +
-    '<a href="index.html" class="logo" aria-label="Vastra Sundari — Home"><span class="logo__name">Vastra Sundari</span><span class="logo__tagline">The Art of Traditional Elegance</span></a>' +
+    '<a href="index.html" class="logo" aria-label="Vastra Sundari — Home"><img class="logo__img" src="' + LOGO_SRC + '" alt="Vastra Sundari" width="150" height="150"></a>' +
+    '<nav class="nav" aria-label="Primary"><ul class="nav__list">' + navItems("nav__link", true) + "</ul></nav>" +
     '<ul class="header__icons" aria-label="Shop tools">' +
     '<li><button class="icon-btn" id="searchOpen" aria-label="Search"><svg><use href="#i-search"/></svg></button></li>' +
     '<li class="hide-sm"><a class="icon-btn" href="wishlist.html" aria-label="Wishlist"><svg><use href="#i-heart"/></svg><span class="icon-btn__count" data-wish-count hidden>0</span></a></li>' +
     '<li><a class="icon-btn" href="cart.html" aria-label="Shopping bag"><svg><use href="#i-bag"/></svg><span class="icon-btn__count" data-cart-count hidden>0</span></a></li>' +
     '<li class="hide-sm"><a class="icon-btn" href="order.html" aria-label="My orders"><svg><use href="#i-user"/></svg></a></li>' +
-    "</ul></div>" +
-    '<nav class="nav" aria-label="Primary"><ul class="nav__list container">' + navItems("nav__link") + "</ul></nav></header>" +
+    "</ul></div></header>" +
 
     '<div class="drawer" id="mobileNav" aria-hidden="true"><div class="drawer__scrim" data-close-drawer></div>' +
     '<aside class="drawer__panel" role="dialog" aria-modal="true" aria-label="Menu">' +
-    '<div class="drawer__head"><span class="logo__name">Vastra Sundari</span><button class="icon-btn" data-close-drawer aria-label="Close menu"><svg><use href="#i-close"/></svg></button></div>' +
+    '<div class="drawer__head"><img class="drawer__logo" src="' + LOGO_SRC + '" alt="Vastra Sundari" width="150" height="150"><button class="icon-btn" data-close-drawer aria-label="Close menu"><svg><use href="#i-close"/></svg></button></div>' +
     '<ul class="drawer__list">' + navItems("") + "</ul>" +
     '<div class="drawer__foot"><a href="wishlist.html"><svg><use href="#i-heart"/></svg> Wishlist</a><a href="order.html"><svg><use href="#i-user"/></svg> My Orders</a></div>' +
     "</aside></div>" +
@@ -117,6 +114,15 @@
     '</div><div class="footer__base container"><span>© ' + new Date().getFullYear() + " Vastra Sundari</span>" +
     "<span>The Art of Traditional Elegance</span></div></footer>";
 
-  if (part === "header") script.insertAdjacentHTML("beforebegin", HEADER);
+  if (part === "header") {
+    script.insertAdjacentHTML("beforebegin", HEADER);
+    if (!document.querySelector('link[rel="icon"]')) {
+      var icon = document.createElement("link");
+      icon.rel = "icon";
+      icon.type = "image/jpeg";
+      icon.href = LOGO_SRC;
+      document.head.appendChild(icon);
+    }
+  }
   if (part === "footer") script.insertAdjacentHTML("beforebegin", FOOTER);
 })();
