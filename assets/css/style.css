@@ -546,11 +546,11 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; margin: 0; }
   background-image: var(--bg-veil), image-set(url("../images/showcase-bg.webp") type("image/webp"), url("../images/showcase-bg.jpg") type("image/jpeg"));
 }
 @media (max-width: 899px) {
-  /* the section is tall on phones: show the whole hall behind the outfits, then fade into a plain tone */
+  /* the section is tall on phones: show the whole hall behind the rail, then fade into a plain tone */
   .showcase__bg {
     background-color: #F0E0C9;
     background-image:
-      linear-gradient(180deg, rgba(240, 224, 201, 0) 360px, #F0E0C9 540px),
+      linear-gradient(180deg, rgba(240, 224, 201, 0) 380px, #F0E0C9 560px),
       image-set(url("../images/showcase-bg-960.webp") type("image/webp"), url("../images/showcase-bg.jpg") type("image/jpeg"));
     background-size: 100% 100%, auto 560px;
     background-position: 0 0, 42% 0;
@@ -561,8 +561,26 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; margin: 0; }
   position: absolute; inset: 0;
   perspective: 1700px;
   perspective-origin: 38% 25%;
-  --rod-y: 36px;          /* top line the outfits hang from */
+  /* Gold hanging rail: every size is derived from --rail-h, so it scales cleanly.
+     In the bracket images the rod starts 84.3% down and is 10.67% of their height. */
+  --rail-h: clamp(96px, 9vw, 124px);
+  --rod-y: calc(var(--rail-h) * .896);          /* centre line of the rod */
   --sel-w: 360px;
+}
+.rail {
+  position: absolute; z-index: 1;
+  top: 0; left: clamp(4px, 1.2vw, 18px); right: clamp(4px, 1.2vw, 18px);
+  height: var(--rail-h);
+  display: flex;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 5px rgba(70, 35, 10, .35));
+}
+.rail__cap { flex: none; width: auto; height: 100%; user-select: none; }
+.rail__bar {
+  flex: 1; min-width: 0;
+  margin: calc(var(--rail-h) * .843) -2px 0;    /* overlap the caps by 2px so no seam shows */
+  height: calc(var(--rail-h) * .1067);
+  background: url("../images/rail/rail-bar.png") left center / auto 100% repeat-x;
 }
 .showcase__line {
   position: absolute; inset: 0;
@@ -573,7 +591,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; margin: 0; }
 /* each hanging garment */
 .hang {
   position: absolute; left: 0;
-  top: var(--rod-y);
+  top: calc(var(--rod-y) - 10px);
   width: var(--sel-w);
   transform-origin: 50% 0;
   will-change: transform;
@@ -589,6 +607,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; margin: 0; }
 }
 .hang__btn:focus-visible { outline: 2px solid var(--burgundy); outline-offset: 6px; border-radius: 8px; }
 .hang__swing { display: block; transform-origin: 50% 2px; }
+.hang__hook { position: relative; z-index: 1; display: block; width: 22%; margin: 0 auto -5%; color: #7A5A2A; filter: drop-shadow(0 2px 1px rgba(60, 30, 10, .3)); }
 .hang__garment { display: block; aspect-ratio: 3 / 4; }
 .hang__garment img,
 .hang__garment .hang__noimg {
@@ -785,18 +804,18 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; margin: 0; }
 /* phones & small tablets: garments on top, details below */
 @media (max-width: 899px) {
   .showcase { height: auto; padding-bottom: 20px; display: flex; flex-direction: column; }
-  .showcase__copy { position: relative; order: -1; left: auto; bottom: auto; padding: 22px var(--gutter) 8px; text-align: center; }
+  .showcase__copy { position: relative; order: -1; left: auto; bottom: auto; padding: 22px var(--gutter) 0; text-align: center; }
   .showcase__copy::before {
     content: ""; position: absolute; z-index: -1; inset: 6px 12% -6px;
     background: radial-gradient(ellipse at center, rgba(250, 244, 232, .82), rgba(250, 244, 232, 0) 72%);
   }
   .showcase__flourish { margin-inline: auto; width: 160px; }
-  .showcase__stage { position: relative; inset: auto; padding-top: 440px; --rod-y: 24px; perspective-origin: 50% 25%; }
+  .showcase__stage { position: relative; inset: auto; padding-top: 470px; --rail-h: 72px; perspective-origin: 50% 25%; }
   .showcase__panel {
     position: relative; top: auto; left: auto; width: auto; max-height: none;
     margin: 0 var(--gutter);
   }
-  .showcase__arrow { top: 200px; width: 42px; height: 42px; }
+  .showcase__arrow { top: 220px; width: 42px; height: 42px; }
   .showcase__strip { position: relative; left: auto; right: auto; bottom: auto; transform: none; width: auto; margin: 16px var(--gutter) 0; order: 1; }
   .showcase__thumbs li { flex-basis: 62px; }
   .strip__btn { height: 76px; }

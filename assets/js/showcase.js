@@ -1,5 +1,5 @@
-// Home page showcase: every product floats in one line, the selected one is
-// large in front, the rest hang smaller on both sides.
+// Home page "clothesline" showcase: every product hangs on one rod, the
+// selected one is large in front, the rest hang smaller on both sides.
 // Selecting another product swings it forward (3D) and swaps the details panel.
 import { sb, isConfigured } from "./lib/supabase.js";
 import { esc, inr, COLLECTIONS, imageFallback } from "./lib/util.js";
@@ -30,6 +30,9 @@ const garment = (p, cls = "") => p.images[0]
   ? `<img class="${cls}" src="${esc(p.images[0].image_url)}" alt="" loading="lazy" decoding="async" draggable="false">`
   : `<div class="${cls} hang__noimg">${imageFallback(p.name)}</div>`;
 
+const hook = `<svg class="hang__hook" viewBox="0 0 60 46" aria-hidden="true">
+  <path d="M30 2a6 6 0 1 1-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M30 8v8L4 40h52L30 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 
 function render(products) {
   root.classList.remove("is-loading");
@@ -45,7 +48,7 @@ function render(products) {
   line.innerHTML = products.map((p, i) => `
     <li class="hang" data-i="${i}">
       <button type="button" class="hang__btn" aria-label="Show ${esc(p.name)}" aria-pressed="false">
-        <span class="hang__swing"><span class="hang__garment">${garment(p)}</span></span>
+        <span class="hang__swing">${hook}<span class="hang__garment">${garment(p)}</span></span>
       </button>
     </li>`).join("");
 
@@ -63,8 +66,10 @@ function render(products) {
   function layout() {
     const W = stage.clientWidth;
     const mobile = W < 900;
-    const H = mobile ? 440 : stage.clientHeight;             // phones: garments live in a fixed 440px band
-    const rodY = parseFloat(getComputedStyle(stage).getPropertyValue("--rod-y")) || 36;  // top line the outfits hang from
+    const H = mobile ? 470 : stage.clientHeight;             // phones: garments live in a fixed 470px band
+    // the rod's centre line comes from the CSS rail (its size is set by --rail-h)
+    const bar = stage.querySelector(".rail__bar").getBoundingClientRect();
+    const rodY = bar.top + bar.height / 2 - stage.getBoundingClientRect().top;
     const room = H - rodY - (mobile ? 20 : 150);            // keep the bottom strip clear
     const selW = Math.max(140, Math.min(mobile ? W * 0.56 : W * 0.25, room * 0.6));
     const smallW = selW * (mobile ? 0.46 : 0.5);
