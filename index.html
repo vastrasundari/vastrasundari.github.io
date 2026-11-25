@@ -17,74 +17,41 @@
   <script src="assets/js/layout.js" data-part="header"></script>
 
   <main>
-    <!-- ============ HERO ============ -->
-    <section class="hero" aria-labelledby="heroTitle">
-      <div class="hero__media">
-        <!--
-          HERO PHOTOGRAPHY
-          Place your full-length editorial image at: assets/images/hero-chaniya-choli.jpg
-          Recommended: 2400×1600+ (landscape), model positioned right-of-centre.
-          A designed fallback shows until it exists.
-        -->
-        <img class="hero__img" src="assets/images/hero-chaniya-choli.jpg"
-             alt="Model in an exquisitely embroidered Gujarati Chaniya Choli against heritage architecture"
-             fetchpriority="high"
-             onerror="this.remove(); document.querySelector('.hero').classList.add('hero--fallback');">
-        <div class="hero__veil" aria-hidden="true"></div>
+    <!-- ============ CLOTHESLINE SHOWCASE (live products) ============ -->
+    <section class="showcase is-loading" id="showcase" aria-labelledby="showcaseTitle">
+      <div class="showcase__bg" aria-hidden="true"></div>
 
-        <div class="hero__art" aria-hidden="true">
-          <svg class="hero__arch" viewBox="0 0 400 560" preserveAspectRatio="xMidYMax meet">
-            <defs>
-              <pattern id="bandhani" width="22" height="22" patternUnits="userSpaceOnUse">
-                <circle cx="11" cy="11" r="1.6" fill="#C5A04A" opacity=".55"/>
-                <circle cx="0" cy="0" r="1.1" fill="#C5A04A" opacity=".35"/>
-                <circle cx="22" cy="0" r="1.1" fill="#C5A04A" opacity=".35"/>
-                <circle cx="0" cy="22" r="1.1" fill="#C5A04A" opacity=".35"/>
-                <circle cx="22" cy="22" r="1.1" fill="#C5A04A" opacity=".35"/>
-              </pattern>
-            </defs>
-            <path d="M40 560V250C40 170 100 120 150 95c25-12 40-30 50-55 10 25 25 43 50 55 50 25 110 75 110 155v310" fill="url(#bandhani)" stroke="#C5A04A" stroke-width="1.5"/>
-            <path d="M70 560V258c0-66 50-108 92-130 18-10 30-22 38-40 8 18 20 30 38 40 42 22 92 64 92 130v302" fill="none" stroke="#C5A04A" stroke-width=".8" opacity=".7"/>
-            <g fill="none" stroke="#C5A04A" stroke-width="1">
-              <circle cx="200" cy="300" r="70" opacity=".6"/>
-              <circle cx="200" cy="300" r="52" opacity=".45"/>
-              <path d="M200 230c10 30 30 50 70 70-40 20-60 40-70 70-10-30-30-50-70-70 40-20 60-40 70-70Z" opacity=".8"/>
-            </g>
-            <g fill="#C5A04A"><circle cx="200" cy="300" r="5"/><circle cx="200" cy="40" r="4"/></g>
-          </svg>
-        </div>
+      <div class="showcase__stage" aria-label="Featured Chaniya Choli — use the arrow keys to browse">
+        <div class="showcase__rod" aria-hidden="true"></div>
+        <ul class="showcase__line"></ul>
+        <aside class="showcase__panel" aria-live="polite" aria-labelledby="scName">
+          <div class="showcase__loader"><span class="vs-spinner"></span></div>
+        </aside>
+        <button type="button" class="showcase__arrow showcase__arrow--prev" data-step="-1" aria-label="Previous design">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+        <button type="button" class="showcase__arrow showcase__arrow--next" data-step="1" aria-label="Next design">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
       </div>
 
-      <div class="hero__content container">
-        <div class="hero__copy">
-          <p class="eyebrow hero__eyebrow reveal">
-            <span class="eyebrow__rule" aria-hidden="true"></span>
-            Navratri &amp; Bridal Edit 2026
-          </p>
-          <h1 class="hero__title reveal" id="heroTitle">Elegance Woven <em>in Tradition</em></h1>
-          <p class="hero__sub reveal">
-            Discover the timeless beauty of Gujarati Chaniya Choli, crafted to celebrate every special moment.
-          </p>
-          <div class="hero__ctas reveal">
-            <a href="shop.html" class="btn btn--gold">
-              Explore Collection
-              <svg aria-hidden="true"><use href="#i-arrow"/></svg>
-            </a>
-            <a href="shop.html?new=1" class="btn btn--ghost">Discover New Arrivals</a>
-          </div>
-          <ul class="hero__marks reveal" aria-label="Craftsmanship">
-            <li><strong>Hand</strong><span>Embroidered</span></li>
-            <li><strong>Kutchi</strong><span>Mirror Work</span></li>
-            <li><strong>Pure</strong><span>Bandhani</span></li>
-          </ul>
-        </div>
+      <div class="showcase__copy">
+        <h1 id="showcaseTitle">Elegance Woven<br><em>in Every Thread</em></h1>
+        <svg class="showcase__flourish" viewBox="0 0 240 20" aria-hidden="true"><path d="M2 12c40-10 70 6 110 0s60-12 90-4c14 4 24 4 36-2"/></svg>
+        <a href="shop.html" class="showcase__cta">Explore Collection →</a>
       </div>
 
-      <a href="#collections" class="hero__scroll" aria-label="Scroll to collections">
-        <span>Scroll</span>
-        <i aria-hidden="true"></i>
-      </a>
-      <div class="hero__border" aria-hidden="true"></div>
+      <div class="showcase__strip showcase__thumbs-wrap">
+        <button type="button" class="strip__nav" data-scroll="-1" aria-label="Scroll designs left">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+        <ul class="showcase__thumbs" aria-label="All designs"></ul>
+        <button type="button" class="strip__nav" data-scroll="1" aria-label="Scroll designs right">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+      </div>
+
+      <ul class="showcase__badges" aria-label="Why shop with us">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>Complimentary Shipping</li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>COD &amp; UPI Payments</li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c1.5 3 4 4.5 7 5-1 3-1 6 0 9-3 .5-5.5 2-7 4-1.5-2-4-3.5-7-4 1-3 1-6 0-9 3-.5 5.5-2 7-5Z"/></svg>Artisan Made</li>
+      </ul>
     </section>
 
     <!-- ============ COLLECTIONS ============ -->
@@ -153,6 +120,7 @@
 
   <script src="assets/js/layout.js" data-part="footer"></script>
   <script src="assets/js/main.js" defer></script>
+  <script type="module" src="assets/js/showcase.js"></script>
   <script type="module">
     import { sb, isConfigured, NOT_CONFIGURED_HTML } from "./assets/js/lib/supabase.js";
     import { productCard, PRODUCT_CARD_SELECT } from "./assets/js/lib/util.js";

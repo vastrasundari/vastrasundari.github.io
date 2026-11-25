@@ -69,7 +69,7 @@ Payment (COD) starts as **Pending**; an admin marks it **Paid** after the cash i
 ## Project structure
 
 ```
-index.html            Home (hero, collections, new arrivals, about)
+index.html            Home (clothesline showcase, collections, new arrivals, about)
 shop.html             Catalogue with collection filters, search, sorting
 product.html          Product page (gallery, sizes with stock, add to bag, wishlist)
 cart.html             Shopping bag (re-validates price/stock against the database)
@@ -78,13 +78,12 @@ order.html            Order confirmation / tracking + "My orders" on this device
 wishlist.html         Saved designs
 admin/                Admin panel (login, dashboard, orders, products)
 assets/
-  css/style.css       Brand styles (header, hero, home sections, footer)
+  css/style.css       Brand styles (header, showcase, home sections, footer)
   css/tailwind.css    Compiled Tailwind — generated, do not edit by hand
   js/config.js        PUBLIC config: Supabase URL + anon key, contact details
   js/layout.js        Shared header / nav / search / footer
   js/main.js          Header behaviour, drawer, search, counters
   js/lib/             supabase client, cart, helpers
-  images/             Hero photography (hero-chaniya-choli.jpg)
 src/tailwind.css      Tailwind source (components)
 supabase/
   schema.sql          Tables, constraints, indexes, functions, RLS, storage bucket
@@ -278,7 +277,7 @@ The DuckDNS token is **not** needed for this setup and must never be committed. 
 
 To move to a purchased domain later, replace the `CNAME` file contents and update `SITE_URL`, `ALLOWED_ORIGINS` and the Supabase Auth URLs.
 
-**Hero photograph:** save your editorial image as `assets/images/hero-chaniya-choli.jpg` (landscape, ≥ 2400×1600, model right of centre). Until then a designed fallback is shown.
+**Home page showcase:** the top of the home page hangs up to 14 live products on a rod (featured products first, then newest). The first photo of each product is the hanging garment, so a **portrait photo of the outfit alone on a transparent (PNG/WebP) or plain light background** looks best; the details panel uses the other photos too.
 
 ---
 
