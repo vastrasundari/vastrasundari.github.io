@@ -66,8 +66,10 @@ function render(products) {
   function layout() {
     const W = stage.clientWidth;
     const mobile = W < 900;
-    const H = mobile ? 430 : stage.clientHeight;             // phones: garments live in a fixed 430px band
-    const rodY = mobile ? 34 : 48;
+    const H = mobile ? 470 : stage.clientHeight;             // phones: garments live in a fixed 470px band
+    // the rod's centre line comes from the CSS rail (its size is set by --rail-h)
+    const bar = stage.querySelector(".rail__bar").getBoundingClientRect();
+    const rodY = bar.top + bar.height / 2 - stage.getBoundingClientRect().top;
     const room = H - rodY - (mobile ? 20 : 150);            // keep the bottom strip clear
     const selW = Math.max(140, Math.min(mobile ? W * 0.56 : W * 0.25, room * 0.6));
     const smallW = selW * (mobile ? 0.46 : 0.5);
@@ -76,7 +78,6 @@ function render(products) {
     const panelW = Math.min(350, W * 0.25);
     const panelLeft = cx + selW / 2 + 28;
     stage.style.setProperty("--sel-w", `${selW}px`);
-    stage.style.setProperty("--rod-y", `${rodY}px`);
     if (!mobile) {
       panel.style.left = `${panelLeft}px`;
       panel.style.width = `${panelW}px`;
