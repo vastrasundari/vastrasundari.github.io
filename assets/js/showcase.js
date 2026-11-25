@@ -62,6 +62,19 @@ function render(products) {
   const stage = root.querySelector(".showcase__stage");
   let sel = 0;
 
+  const AUTO_MS = 4500;
+  const HOLD_AFTER_USER_MS = 9000;
+  const autoEnabled = !reduceMotion && products.length > 1;
+  let autoTimer = null, holdUntil = 0, userPaused = false, hovering = false, focused = false, onScreen = true;
+  function schedule() {
+    clearTimeout(autoTimer);
+    if (!autoEnabled || userPaused) return;
+    autoTimer = setTimeout(() => {
+      if (hovering || focused || !onScreen || document.hidden || Date.now() < holdUntil) return schedule();
+      select(sel + 1, { auto: true });
+    }, AUTO_MS);
+  }
+
   // ---------- 3D layout ----------
   function layout() {
     const W = stage.clientWidth;
@@ -86,8 +99,11 @@ function render(products) {
     }
     const rightStart = mobile ? cx + selW / 2 + step * 0.55 : panelLeft + panelW + 20 + smallW / 2;
 
+    const n = items.length;
     items.forEach((li, i) => {
-      const d = i - sel;
+      // circular offset: the line wraps, so the next design always waits on the right
+      let d = i - sel;
+      if (n > 2) { d = ((d % n) + n) % n; if (d > n / 2) d -= n; }
       const a = Math.abs(d);
       let x, scale, z, rot, opacity;
       if (d === 0) {
@@ -99,8 +115,20 @@ function render(products) {
         x = d < 0 ? cx - selW / 2 - step * 0.55 - (a - 1) * step : rightStart + (a - 1) * step;
         opacity = a > (mobile ? 2 : 5) ? 0 : 1 - (a - 1) * 0.08;
       }
-      li.style.transform = `translate3d(${x - selW / 2}px, 0, ${z}px) rotateY(${rot}deg) scale(${scale})`;
-      li.style.opacity = opacity;
+      const transform = `translate3d(${x - selW / 2}px, 0, ${z}px) rotateY(${rot}deg) scale(${scale})`;
+      if (li._x !== undefined && Math.abs(x - li._x) > W * 0.62 && root.classList.contains("is-ready")) {
+        // wrapping from one end of the line to the other: jump there invisibly, then fade in
+        li.style.transition = "none";
+        li.style.opacity = 0;
+        li.style.transform = transform;
+        void li.offsetWidth;
+        li.style.transition = "";
+        requestAnimationFrame(() => { li.style.opacity = opacity; });
+      } else {
+        li.style.transform = transform;
+        li.style.opacity = opacity;
+      }
+      li._x = x;
       li.style.zIndex = String(100 - a);
       li.classList.toggle("is-selected", d === 0);
       li.style.pointerEvents = opacity === 0 ? "none" : "";
@@ -181,9 +209,13 @@ function render(products) {
 
   // ---------- selection ----------
   let panelTimer;
-  function select(i, { initial = false } = {}) {
+  function select(i, { initial = false, auto = false } = {}) {
     i = (i + products.length) % products.length;
+    if (!auto && !initial) holdUntil = Date.now() + HOLD_AFTER_USER_MS;
+    schedule();
     if (i === sel && !initial) return;
+    // don't make screen readers announce every automatic change
+    panel.setAttribute("aria-live", auto ? "off" : "polite");
     const prev = sel;
     sel = i;
     layout();
@@ -193,13 +225,15 @@ function render(products) {
     strip.scrollTo({ left: t.offsetLeft - (strip.clientWidth - t.offsetWidth) / 2, behavior: reduceMotion || initial ? "auto" : "smooth" });
 
     if (!reduceMotion && !initial) {
-      // the newly selected garment swings forward; its old neighbour sways a little
-      for (const k of [sel, prev]) {
-        const sw = items[k].querySelector(".hang__swing");
-        sw.classList.remove("is-swinging", "is-swaying");
-        void sw.offsetWidth;
-        sw.classList.add(k === sel ? "is-swinging" : "is-swaying");
-      }
+      // the garment arriving in the centre turns round in 3D; the one leaving sways a little
+      const g = items[sel].querySelector(".hang__garment");
+      g.classList.remove("is-flipping");
+      void g.offsetWidth;
+      g.classList.add("is-flipping");
+      const sw = items[prev].querySelector(".hang__swing");
+      sw.classList.remove("is-swaying");
+      void sw.offsetWidth;
+      sw.classList.add("is-swaying");
     }
 
     clearTimeout(panelTimer);
@@ -238,6 +272,32 @@ function render(products) {
     if (Math.abs(dx) > 40) select(sel + (dx < 0 ? 1 : -1));
     x0 = null;
   }, { passive: true });
+
+  // ---------- auto-scroll ----------
+  // Advances every few seconds; pauses while the pointer or keyboard focus is on the
+  // showcase, for a while after any manual choice, when it is off screen or the tab is
+  // hidden, and whenever the viewer presses Pause. Off for reduced-motion users.
+  const wrap = root.querySelector(".showcase__thumbs-wrap");
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "strip__nav strip__play";
+  wrap.append(toggle);
+  const syncToggle = () => {
+    toggle.setAttribute("aria-label", userPaused ? "Play automatic scrolling" : "Pause automatic scrolling");
+    toggle.innerHTML = userPaused
+      ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>`
+      : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>`;
+  };
+  toggle.addEventListener("click", () => { userPaused = !userPaused; syncToggle(); schedule(); });
+  if (!autoEnabled) toggle.remove(); else syncToggle();
+
+  root.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") hovering = true; });
+  root.addEventListener("pointerleave", () => { hovering = false; schedule(); });
+  root.addEventListener("pointerdown", (e) => { if (e.pointerType !== "mouse") holdUntil = Date.now() + HOLD_AFTER_USER_MS; });
+  root.addEventListener("focusin", (e) => { focused = e.target.matches(":focus-visible"); });   // keyboard focus only
+  root.addEventListener("focusout", (e) => { if (!root.contains(e.relatedTarget)) { focused = false; schedule(); } });
+  document.addEventListener("visibilitychange", schedule);
+  new IntersectionObserver(([en]) => { onScreen = en.isIntersecting; schedule(); }, { threshold: 0.35 }).observe(root);
 
   new ResizeObserver(() => layout()).observe(stage);
   select(0, { initial: true });

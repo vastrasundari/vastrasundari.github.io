@@ -606,7 +606,15 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; margin: 0; }
   -webkit-tap-highlight-color: transparent;
 }
 .hang__btn:focus-visible { outline: 2px solid var(--burgundy); outline-offset: 6px; border-radius: 8px; }
-.hang__swing { display: block; transform-origin: 50% 2px; }
+.hang__swing { display: block; transform-origin: 50% 2px; transition: filter .7s var(--ease); }
+/* garments waiting on the rail are small and softly out of focus; the centre one is sharp */
+.showcase.is-ready .hang:not(.is-selected) .hang__swing { filter: blur(1.6px) saturate(.88); }
+.hang__garment.is-flipping { animation: vsFlip 1s cubic-bezier(.25, .7, .25, 1); }
+@keyframes vsFlip {
+  from { transform: perspective(1100px) rotateY(-360deg) scale(.92); }
+  55%  { transform: perspective(1100px) rotateY(-110deg) scale(.97); }
+  to   { transform: perspective(1100px) rotateY(0) scale(1); }
+}
 .hang__hook { position: relative; z-index: 1; display: block; width: 22%; margin: 0 auto -5%; color: #7A5A2A; filter: drop-shadow(0 2px 1px rgba(60, 30, 10, .3)); }
 .hang__garment { display: block; aspect-ratio: 3 / 4; }
 .hang__garment img,
@@ -758,6 +766,8 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; margin: 0; }
   flex: none; display: grid; place-items: center; width: 34px; height: 34px;
   border: 0; border-radius: 50%; background: #fff; cursor: pointer;
 }
+.strip__play { margin-left: 4px; background: var(--burgundy); }
+.strip__play svg { stroke: var(--ivory) !important; }
 .strip__nav svg { width: 16px; height: 16px; fill: none; stroke: var(--charcoal); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* trust badges */
@@ -824,5 +834,5 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 500; margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .showcase.is-ready .hang, .showcase__panel { transition: none; }
-  .hang__swing { animation: none !important; }
+  .hang__swing, .hang__garment { animation: none !important; }
 }
