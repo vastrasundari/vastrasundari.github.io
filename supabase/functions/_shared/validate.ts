@@ -1,13 +1,13 @@
 // Server-side checkout validation. Never trust the browser.
 
-export const INDIAN_STATES = [
-  "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
-  "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa",
-  "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka",
-  "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
-  "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
-  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
-];
+// Delivery area: Gujarat only, and only these cities. Each city lists the
+// PIN code prefixes that belong to it (Rajkot 360xxx, Jamnagar 361xxx, Ahmedabad 380xxx/382xxx).
+export const DELIVERY_STATES = ["Gujarat"];
+export const DELIVERY_CITIES: Record<string, string[]> = {
+  Rajkot: ["360"],
+  Jamnagar: ["361"],
+  Ahmedabad: ["380", "382"],
+};
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -63,8 +63,10 @@ export function validateCheckout(body: unknown):
   if (!/^[6-9]\d{9}$/.test(phone)) errors.phone = "Please enter a valid 10-digit Indian mobile number.";
   if (line1.length < 5 || line1.length > 200) errors.line1 = "Please enter your full address.";
   if (line2.length > 200) errors.line2 = "Address line 2 is too long.";
-  if (city.length < 2 || city.length > 60) errors.city = "Please enter your city.";
-  if (!INDIAN_STATES.includes(state)) errors.state = "Please select your state.";
+  if (!Object.hasOwn(DELIVERY_CITIES, city)) errors.city = "We deliver only to Rajkot, Jamnagar and Ahmedabad.";
+  if (!DELIVERY_STATES.includes(state)) errors.state = "We deliver only within Gujarat.";
+  else if (!errors.city && /^[1-9]\d{5}$/.test(pincode) && !DELIVERY_CITIES[city].some((p) => pincode.startsWith(p)))
+    errors.pincode = `This PIN code is not in ${city}.`;
   if (!/^[1-9]\d{5}$/.test(pincode)) errors.pincode = "Please enter a valid 6-digit PIN code.";
   if (notes.length > 500) errors.notes = "Order notes must be under 500 characters.";
   if (!PAYMENT_METHODS.includes(payment_method)) errors.payment_method = "Cash on Delivery is not available. Please pay by UPI.";

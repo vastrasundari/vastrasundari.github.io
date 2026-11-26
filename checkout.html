@@ -63,7 +63,7 @@
               </div>
               <div>
                 <label class="vs-label" for="city">City *</label>
-                <input class="vs-input" id="city" name="city" autocomplete="address-level2" required maxlength="60">
+                <select class="vs-input" id="city" name="city" autocomplete="address-level2" required></select>
                 <p class="vs-error hidden" data-err="city"></p>
               </div>
               <div>
@@ -75,6 +75,7 @@
                 <label class="vs-label" for="state">State *</label>
                 <select class="vs-input" id="state" name="state" autocomplete="address-level1" required></select>
                 <p class="vs-error hidden" data-err="state"></p>
+                <p class="mt-2 text-xs text-charcoal/55">We currently deliver only to Rajkot, Jamnagar and Ahmedabad (Gujarat).</p>
               </div>
               <div class="md:col-span-2">
                 <label class="vs-label" for="notes">Order notes (optional)</label>
@@ -122,17 +123,17 @@
     import { esc, inr, upiId } from "./assets/js/lib/util.js";
     import { getCart, clearCart, saveOrder } from "./assets/js/lib/cart.js";
 
-    const STATES = ["Andaman and Nicobar Islands","Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chandigarh","Chhattisgarh",
-      "Dadra and Nagar Haveli and Daman and Diu","Delhi","Goa","Gujarat","Haryana","Himachal Pradesh","Jammu and Kashmir","Jharkhand",
-      "Karnataka","Kerala","Ladakh","Lakshadweep","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha",
-      "Puducherry","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal"];
+    // Delivery area: Gujarat only, these three cities only (server enforces the same rules).
+    const STATES = ["Gujarat"];
+    const CITIES = { Rajkot: ["360"], Jamnagar: ["361"], Ahmedabad: ["380", "382"] };
 
     const items = getCart();
     if (!items.length) location.replace("cart.html");
 
     const form = document.getElementById("checkoutForm");
     const stateSel = document.getElementById("state");
-    stateSel.innerHTML = `<option value="">Select state</option>` + STATES.map((s) => `<option>${s}</option>`).join("");
+    stateSel.innerHTML = STATES.map((s) => `<option selected>${s}</option>`).join("");
+    document.getElementById("city").innerHTML = `<option value="">Select city</option>` + Object.keys(CITIES).map((c) => `<option>${c}</option>`).join("");
 
     // Order summary (display only; the server recalculates)
     const subtotal = items.reduce((n, i) => n + i.price * i.qty, 0);
@@ -153,9 +154,13 @@
       phone: (v) => /^[6-9]\d{9}$/.test(v.replace(/\D/g, "").replace(/^(91|0)(?=\d{10}$)/, "")) || "Please enter a valid 10-digit Indian mobile number.",
       email: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) || "Please enter a valid email address.",
       line1: (v) => v.length >= 5 || "Please enter your full address.",
-      city: (v) => v.length >= 2 || "Please enter your city.",
-      pincode: (v) => /^[1-9]\d{5}$/.test(v) || "Please enter a valid 6-digit PIN code.",
-      state: (v) => STATES.includes(v) || "Please select your state.",
+      city: (v) => Object.hasOwn(CITIES, v) || "We deliver only to Rajkot, Jamnagar and Ahmedabad.",
+      pincode: (v) => {
+        if (!/^[1-9]\d{5}$/.test(v)) return "Please enter a valid 6-digit PIN code.";
+        const city = document.getElementById("city").value;
+        return !Object.hasOwn(CITIES, city) || CITIES[city].some((p) => v.startsWith(p)) || `This PIN code is not in ${city}.`;
+      },
+      state: (v) => STATES.includes(v) || "We deliver only within Gujarat.",
     };
 
     function showErrors(errs) {

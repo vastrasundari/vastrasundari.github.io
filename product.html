@@ -61,7 +61,7 @@
       const inStock = sizes.some((s) => s.stock > 0);
       setPageMeta({
         title: `${p.name} – Buy in Jamnagar | Vastra Sundari`,
-        description: excerpt(`${p.name}${p.craft ? ` with ${p.craft}` : ""} – ₹${Number(p.price).toLocaleString("en-IN")}. ${p.description || "Handcrafted Chaniya Choli"}. Free delivery in Jamnagar & across India, UPI payment.`),
+        description: excerpt(`${p.name}${p.craft ? ` with ${p.craft}` : ""} – ₹${Number(p.price).toLocaleString("en-IN")}. ${p.description || "Handcrafted Chaniya Choli"}. Free delivery in Jamnagar, Rajkot & Ahmedabad, UPI payment.`),
         path, image: imgs[0]?.image_url, type: "product",
       });
       setJsonLd("product", {
