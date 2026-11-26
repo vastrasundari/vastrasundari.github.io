@@ -34,7 +34,9 @@ export interface CheckoutInput {
   payment_method: PaymentMethod;
 }
 
-export const PAYMENT_METHODS = ["cod", "upi"] as const;
+// Methods accepted for NEW orders. Cash on Delivery is no longer offered
+// (old "cod" orders still exist in the database and display normally).
+export const PAYMENT_METHODS = ["upi"] as const;
 export type PaymentMethod = typeof PAYMENT_METHODS[number];
 
 export function validateCheckout(body: unknown):
@@ -53,7 +55,7 @@ export function validateCheckout(body: unknown):
   const state = str(a.state);
   const pincode = str(a.pincode).replace(/\s/g, "");
   const notes = str(b.notes);
-  const payment_method = (b.payment_method ?? "cod") as PaymentMethod;
+  const payment_method = (b.payment_method ?? "upi") as PaymentMethod;
 
   if (full_name.length < 2 || full_name.length > 100 || !/^[\p{L} .'-]+$/u.test(full_name))
     errors.full_name = "Please enter your full name.";
@@ -65,7 +67,7 @@ export function validateCheckout(body: unknown):
   if (!INDIAN_STATES.includes(state)) errors.state = "Please select your state.";
   if (!/^[1-9]\d{5}$/.test(pincode)) errors.pincode = "Please enter a valid 6-digit PIN code.";
   if (notes.length > 500) errors.notes = "Order notes must be under 500 characters.";
-  if (!PAYMENT_METHODS.includes(payment_method)) errors.payment_method = "Please choose a payment method.";
+  if (!PAYMENT_METHODS.includes(payment_method)) errors.payment_method = "Cash on Delivery is not available. Please pay by UPI.";
 
   const rawItems = Array.isArray(b.items) ? b.items : [];
   const items: CheckoutInput["items"] = [];

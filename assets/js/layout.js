@@ -109,7 +109,7 @@
     '<li><a href="shop.html?new=1">New Arrivals</a></li><li><a href="shop.html?collection=navratri">Navratri</a></li>' +
     '<li><a href="shop.html?collection=bridal">Bridal</a></li><li><a href="shop.html?collection=festive">Festive</a></li></ul></div>' +
     '<div><h4>Help</h4><ul><li><a href="order.html">Track my order</a></li><li><a href="cart.html">Shopping bag</a></li>' +
-    "<li>Cash on Delivery across India</li></ul></div>" +
+    "<li>Secure UPI payments</li></ul></div>" +
     "<div><h4>Contact</h4><ul>" + (contactLines() || "<li>We would love to hear from you.</li>") + "</ul></div>" +
     '</div><div class="footer__base container"><span>© ' + new Date().getFullYear() + " Vastra Sundari</span>" +
     "<span>The Art of Traditional Elegance</span></div></footer>";

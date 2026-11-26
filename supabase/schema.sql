@@ -220,7 +220,7 @@ create or replace function public.create_order(
   p_address  jsonb,   -- {line1, line2, city, state, pincode}
   p_items    jsonb,   -- [{size_id, quantity}, ...]
   p_notes    text,
-  p_payment_method text default 'cod'   -- 'cod' | 'upi'
+  p_payment_method text default 'upi'   -- only 'upi' for new orders (COD discontinued)
 ) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare
@@ -236,7 +236,7 @@ declare
   v_phone          text := trim(p_customer->>'phone');
   v_recent         int;
 begin
-  if p_payment_method is null or p_payment_method not in ('cod', 'upi') then
+  if p_payment_method is null or p_payment_method <> 'upi' then
     raise exception 'INVALID_PAYMENT_METHOD' using errcode = 'P0001';
   end if;
   if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then

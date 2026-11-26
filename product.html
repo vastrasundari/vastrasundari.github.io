@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chaniya Choli in Jamnagar | Vastra Sundari</title>
-  <meta name="description" content="Handcrafted Chaniya Choli from Vastra Sundari, Jamnagar. Free delivery, Cash on Delivery &amp; UPI.">
+  <meta name="description" content="Handcrafted Chaniya Choli from Vastra Sundari, Jamnagar. Free delivery and easy UPI payment.">
   <meta property="og:type" content="product">
   <meta property="og:site_name" content="Vastra Sundari">
   <meta name="twitter:card" content="summary_large_image">
@@ -61,7 +61,7 @@
       const inStock = sizes.some((s) => s.stock > 0);
       setPageMeta({
         title: `${p.name} – Buy in Jamnagar | Vastra Sundari`,
-        description: excerpt(`${p.name}${p.craft ? ` with ${p.craft}` : ""} – ₹${Number(p.price).toLocaleString("en-IN")}. ${p.description || "Handcrafted Chaniya Choli"}. Free delivery in Jamnagar & across India, COD & UPI.`),
+        description: excerpt(`${p.name}${p.craft ? ` with ${p.craft}` : ""} – ₹${Number(p.price).toLocaleString("en-IN")}. ${p.description || "Handcrafted Chaniya Choli"}. Free delivery in Jamnagar & across India, UPI payment.`),
         path, image: imgs[0]?.image_url, type: "product",
       });
       setJsonLd("product", {
@@ -115,7 +115,7 @@
               <span class="font-medium text-charcoal">${inr(p.price)}</span>
               ${p.compare_at_price ? `<span class="ml-3 text-base text-charcoal/45 line-through">${inr(p.compare_at_price)}</span>` : ""}
             </p>
-            <p class="mt-1 text-xs text-charcoal/55">Inclusive of all taxes · Cash on Delivery &amp; UPI available</p>
+            <p class="mt-1 text-xs text-charcoal/55">Inclusive of all taxes · Pay securely by UPI</p>
 
             <div class="mt-8">
               <div class="mb-3 flex items-baseline justify-between">

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Buy Chaniya Choli Online in Jamnagar | Vastra Sundari</title>
-  <meta name="description" content="Shop handcrafted Chaniya Choli online in Jamnagar – Navratri, bridal and festive designs with mirror work and bandhani. Free delivery, Cash on Delivery &amp; UPI.">
+  <meta name="description" content="Shop handcrafted Chaniya Choli online in Jamnagar – Navratri, bridal and festive designs with mirror work and bandhani. Free delivery and easy UPI payment.">
   <link rel="canonical" href="https://vastrasundari.duckdns.org/shop.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Vastra Sundari">
@@ -72,11 +72,11 @@
     // Search-engine tags: each collection is its own indexable page aimed at Jamnagar shoppers
     const SEO = {
       navratri: ["Navratri Chaniya Choli in Jamnagar | Garba Chaniya Choli – Vastra Sundari",
-        "Navratri Chaniya Choli in Jamnagar – mirror work and bandhani designs made for garba nights. Free delivery, COD & UPI."],
+        "Navratri Chaniya Choli in Jamnagar – mirror work and bandhani designs made for garba nights. Free delivery, UPI payment."],
       bridal: ["Bridal Chaniya Choli in Jamnagar | Wedding Chaniya Choli – Vastra Sundari",
-        "Bridal Chaniya Choli in Jamnagar – heavily embroidered zari, zardozi and mirror-work designs for weddings. Free delivery, COD & UPI."],
+        "Bridal Chaniya Choli in Jamnagar – heavily embroidered zari, zardozi and mirror-work designs for weddings. Free delivery, UPI payment."],
       festive: ["Festive Chaniya Choli in Jamnagar | Diwali & Wedding Wear – Vastra Sundari",
-        "Festive Chaniya Choli in Jamnagar for Diwali, weddings and celebrations. Handcrafted designs, free delivery, COD & UPI."],
+        "Festive Chaniya Choli in Jamnagar for Diwali, weddings and celebrations. Handcrafted designs, free delivery, UPI payment."],
     };
     if (q) {
       document.title = `“${q}” – Chaniya Choli search | Vastra Sundari`;
@@ -85,7 +85,7 @@
       setPageMeta({ title: SEO[collection][0], description: SEO[collection][1], path: `shop.html?collection=${collection}` });
     } else if (onlyNew) {
       setPageMeta({ title: "New Arrival Chaniya Choli in Jamnagar | Vastra Sundari",
-        description: "The latest Chaniya Choli designs at Vastra Sundari, Jamnagar – new Navratri, bridal and festive arrivals. Free delivery, COD & UPI.", path: "shop.html?new=1" });
+        description: "The latest Chaniya Choli designs at Vastra Sundari, Jamnagar – new Navratri, bridal and festive arrivals. Free delivery, UPI payment.", path: "shop.html?new=1" });
     } else {
       setPageMeta({ title: document.title, description: document.querySelector('meta[name="description"]').content, path: "shop.html" });
     }

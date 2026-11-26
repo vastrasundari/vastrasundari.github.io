@@ -18,7 +18,7 @@ window.VS_CONFIG = {
   WHATSAPP_NUMBER: "919510668822",
   STUDIO_ADDRESS: "Jamnagar, Gujarat",
 
-  // UPI payments at checkout (leave UPI_ID "" to offer Cash on Delivery only).
+  // UPI is the only payment method at checkout – UPI_ID must be set or checkout is disabled.
   // Customers pay to this UPI ID, enter their UTR, and an admin marks the order as paid.
   UPI_ID: "khandarvipul@okhdfcbank",
   UPI_PAYEE_NAME: "Vastra Sundari",

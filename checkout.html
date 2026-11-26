@@ -91,13 +91,8 @@
           <fieldset class="mt-10">
             <legend class="font-display text-2xl text-burgundy">Payment</legend>
             <div class="mt-5 grid gap-3" id="payOptions">
-              <label class="vs-payopt">
-                <input type="radio" name="payment_method" value="cod" checked>
-                <span><span class="block font-medium text-burgundy">Cash on Delivery</span>
-                <span class="mt-1 block text-sm text-charcoal/65">Pay in cash when your order is delivered. Our team will confirm your order before dispatch.</span></span>
-              </label>
-              <label class="vs-payopt hidden" id="upiOption">
-                <input type="radio" name="payment_method" value="upi">
+              <label class="vs-payopt" id="upiOption">
+                <input type="radio" name="payment_method" value="upi" checked>
                 <span><span class="block font-medium text-burgundy">UPI <span class="ml-1 text-xs font-normal text-charcoal/55">Google Pay · PhonePe · Paytm · BHIM</span></span>
                 <span class="mt-1 block text-sm text-charcoal/65">After placing the order, scan the QR code or open your UPI app to pay, then enter the 12-digit UPI reference (UTR). We confirm your order once the payment reaches us.</span></span>
               </label>
@@ -111,9 +106,9 @@
           <dl class="mt-4 space-y-3 border-t border-charcoal/10 pt-4 text-sm">
             <div class="flex justify-between"><dt class="text-charcoal/70">Subtotal</dt><dd id="sumSubtotal"></dd></div>
             <div class="flex justify-between"><dt class="text-charcoal/70">Shipping</dt><dd>Complimentary</dd></div>
-            <div class="flex justify-between border-t border-charcoal/10 pt-4 text-base font-medium"><dt id="sumTotalLabel">Total to pay on delivery</dt><dd class="text-burgundy" id="sumTotal"></dd></div>
+            <div class="flex justify-between border-t border-charcoal/10 pt-4 text-base font-medium"><dt id="sumTotalLabel">Total to pay by UPI</dt><dd class="text-burgundy" id="sumTotal"></dd></div>
           </dl>
-          <button type="submit" class="vs-btn vs-btn--primary mt-6 w-full" id="placeBtn">Place Order</button>
+          <button type="submit" class="vs-btn vs-btn--primary mt-6 w-full" id="placeBtn">Place Order &amp; Pay by UPI</button>
           <p class="mt-3 text-center text-xs text-charcoal/55">Final prices and availability are confirmed when you place the order.</p>
         </aside>
       </form>
@@ -149,16 +144,8 @@
     document.getElementById("sumSubtotal").textContent = inr(subtotal);
     document.getElementById("sumTotal").textContent = inr(subtotal);
 
-    // Payment method: UPI is offered only when a UPI ID is set in config.js.
-    if (upiId()) document.getElementById("upiOption").classList.remove("hidden");
-    const method = () => (upiId() && form.querySelector('input[name="payment_method"]:checked')?.value === "upi" ? "upi" : "cod");
-    const placeLabel = () => (method() === "upi" ? "Place Order & Pay by UPI" : "Place Order");
-    const syncMethod = () => {
-      document.getElementById("sumTotalLabel").textContent = method() === "upi" ? "Total to pay by UPI" : "Total to pay on delivery";
-      document.getElementById("placeBtn").textContent = placeLabel();
-    };
-    form.querySelectorAll('input[name="payment_method"]').forEach((r) => r.addEventListener("change", syncMethod));
-    syncMethod();
+    // Payment: UPI only (Cash on Delivery is not offered). Needs UPI_ID in config.js.
+    const placeLabel = () => "Place Order & Pay by UPI";
 
     // Client-side checks mirror the server rules (server remains the authority).
     const rules = {
@@ -196,7 +183,7 @@
       showErrors(errs);
       if (Object.keys(errs).length) return;
 
-      if (!isConfigured) { showAlert("Online ordering is not available yet. Please contact us to place your order."); return; }
+      if (!isConfigured || !upiId()) { showAlert("Online ordering is not available yet. Please contact us to place your order."); return; }
 
       const btn = document.getElementById("placeBtn");
       btn.disabled = true;
@@ -207,7 +194,7 @@
           address: { line1: f.line1, line2: f.line2, city: f.city, state: f.state, pincode: f.pincode },
           notes: f.notes,
           website: f.website,
-          payment_method: method(),
+          payment_method: "upi",
           items: getCart().map((i) => ({ size_id: i.sizeId, quantity: i.qty })),
         });
         saveOrder(res.order_number, res.access_token);
